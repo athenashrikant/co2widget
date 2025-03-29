@@ -1,49 +1,35 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
-const { spawn } = require('child_process');
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
 let mainWindow;
 
-app.whenReady().then(() => {
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false, // Allows using CommonJS modules
-    },
-  });
+function createWindow() {
+    mainWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false
+        }
+    });
 
-  mainWindow.loadFile('index.html');
+    mainWindow.loadFile('index.html');
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
+}
+
+app.on('ready', createWindow);
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
-// IPC communication to fetch data
-ipcMain.on('fetch-data', (event) => {
-  const pythonProcess = spawn('python', ['data.py']);
-
-  let data = '';
-  let error = '';
-
-  // Collect data output
-  pythonProcess.stdout.on('data', (chunk) => {
-    data += chunk.toString();
-  });
-
-  // Collect errors
-  pythonProcess.stderr.on('data', (chunk) => {
-    error += chunk.toString();
-  });
-
-  // On process close, send the data back to the renderer process
-  pythonProcess.on('close', (code) => {
-    if (code === 0) {
-      try {
-        const parsedData = JSON.parse(data); // Ensure `data.py` outputs JSON
-        event.reply('data-response', parsedData);
-      } catch (err) {
-        event.reply('data-response', { error: 'Failed to parse data from Python script' });
-      }
-    } else {
-      event.reply('data-response', { error: error || 'Python script error' });
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
     }
-  });
 });

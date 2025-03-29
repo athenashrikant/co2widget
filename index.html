@@ -1,80 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dramatic Carbon Emissions Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #f9f9f9, #e0e0e0);
-    }
-
-    h1 {
-      margin-top: 20px;
-      font-size: 2rem;
-      color: #333;
-    }
-
-    .chart-container {
-      width: 350px;
-      height: 350px;
-      margin: 40px auto;
-      position: relative;
-    }
-
-    .info {
-      margin: 20px auto;
-      padding: 20px;
-      background: #ffffff;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      border-radius: 12px;
-      width: 300px;
-      color: #555;
-      transition: transform 0.3s ease-in-out;
-    }
-
-    .info:hover {
-      transform: scale(1.05);
-    }
-
-    canvas {
-      margin: 0 auto;
-    }
-
-    .stat {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-
-    #status {
-      color: #36a2eb;
-      font-size: 1.2rem;
-      margin-top: 10px;
-      transition: color 0.5s ease;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Power Consumption</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        canvas {
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
-  <h1>Dramatic Carbon Emissions Dashboard</h1>
-
-  <!-- Carbon Emission Circle -->
-  <div class="chart-container">
-    <canvas id="carbonChart"></canvas>
-    <div id="status">Fetching data...</div>
-  </div>
-
-  <div class="info">
-    <p class="stat">Uptime: <span id="uptime">--</span> hours</p>
-    <p class="stat">Energy Usage: <span id="energy">--</span> kWh</p>
-    <p class="stat">CO2 Emissions: <span id="co2">--</span> kg</p>
-  </div>
-
-  <script src="renderer.js"></script>
+    <h1>Real-Time Power Consumption and Climate Impact</h1>
+    <canvas id="powerChart" width="800" height="400"></canvas>
+    <script src="renderer.js"></script>
 </body>
 </html>
