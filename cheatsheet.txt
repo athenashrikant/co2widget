@@ -1,3 +1,0 @@
-pnpm run start
-yarn start
-npm start
