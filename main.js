@@ -1,49 +1,43 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+// === main.js (Electron Main Process) ===
+const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
+const path = require('path');
 
 let mainWindow;
 
 app.whenReady().then(() => {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 800,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false, // Allows using CommonJS modules
+      contextIsolation: false,
     },
   });
 
   mainWindow.loadFile('index.html');
-});
 
-// IPC communication to fetch data
-ipcMain.on('fetch-data', (event) => {
-  const pythonProcess = spawn('python', ['data.py']);
+  const pythonProcess = spawn('python', [path.join(__dirname, 'adaptive_power_tracker.py')]);
 
-  let data = '';
-  let error = '';
-
-  // Collect data output
   pythonProcess.stdout.on('data', (chunk) => {
-    data += chunk.toString();
-  });
-
-  // Collect errors
-  pythonProcess.stderr.on('data', (chunk) => {
-    error += chunk.toString();
-  });
-
-  // On process close, send the data back to the renderer process
-  pythonProcess.on('close', (code) => {
-    if (code === 0) {
-      try {
-        const parsedData = JSON.parse(data); // Ensure `data.py` outputs JSON
-        event.reply('data-response', parsedData);
-      } catch (err) {
-        event.reply('data-response', { error: 'Failed to parse data from Python script' });
+    const lines = chunk.toString().split('\n');
+    lines.forEach((line) => {
+      if (line.trim()) {
+        try {
+          const jsonData = JSON.parse(line);
+          mainWindow.webContents.send('power-data', jsonData);
+        } catch (e) {
+          console.error('Invalid JSON:', line);
+        }
       }
-    } else {
-      event.reply('data-response', { error: error || 'Python script error' });
-    }
+    });
+  });
+
+  pythonProcess.stderr.on('data', (err) => {
+    console.error('Python stderr:', err.toString());
+  });
+
+  pythonProcess.on('close', (code) => {
+    console.log(`Python script exited with code ${code}`);
   });
 });

@@ -1,94 +1,71 @@
 const { ipcRenderer } = require('electron');
 
-// Function to fetch data from the Python script
-async function fetchData() {
-  return new Promise((resolve, reject) => {
-    ipcRenderer.once('data-response', (_, data) => {
-      if (data.error) {
-        reject(data.error);
-      } else {
-        resolve(data);
-      }
-    });
+const CO2_PER_KWH = 0.82;
+let total_energy_kwh = 0;
+let total_co2 = 0;
 
-    ipcRenderer.send('fetch-data'); // Trigger data fetch in the main process
-  });
-}
+// Setup chart contexts
+const powerCtx = document.getElementById('powerChart').getContext('2d');
+const co2Ctx = document.getElementById('carbonChart').getContext('2d');
 
-// Function to update the Chart.js chart with a 10 kg maximum capacity
-function updateChart(value) {
-  const maxCapacity = 3; // Set the wheel's capacity to 10 kilograms
-  const ctx = document.getElementById('carbonChart').getContext('2d');
-
-  // Create a gradient color for dramatic effect
-  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-  gradient.addColorStop(0, value > 1 ? '#ff4d4d' : value > 2 ? '#ffcc00' : '#36a2eb');
-  gradient.addColorStop(1, '#ffffff');
-
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['CO2 Emissions (kg)', 'Remaining Capacity (kg)'],
-      datasets: [{
-        data: [value, maxCapacity - value], // Use the 10 kg max capacity
-        backgroundColor: [gradient, '#e0e0e0'], // Gradient for CO2, gray for remaining
-        hoverBackgroundColor: [gradient, '#e0e0e0'],
-        borderWidth: 2,
-      }],
-    },
-    options: {
-      cutout: '75%', // Bigger hole in the center for aesthetics
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function (tooltipItem) {
-              return `${tooltipItem.label}: ${tooltipItem.raw.toFixed(2)} kg`;
-            },
-          },
-        },
-      },
-      animation: {
-        animateRotate: true,
-        animateScale: true,
-      },
-    },
-  });
-
-  // Update the status text dynamically based on the CO2 value
-  const statusElement = document.getElementById('status');
-  if (value > 7.5) {
-    statusElement.textContent = 'High Emissions! 🌡️';
-    statusElement.style.color = '#ff4d4d';
-  } else if (value > 5) {
-    statusElement.textContent = 'Moderate Emissions ⚠️';
-    statusElement.style.color = '#ffcc00';
-  } else {
-    statusElement.textContent = 'Low Emissions! ✅';
-    statusElement.style.color = '#36a2eb';
+// Chart #1 – Power Output (Live)
+const powerChart = new Chart(powerCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Current Power (W)', 'Remaining (100 W max)'],
+    datasets: [{
+      data: [0, 100],
+      backgroundColor: ['#36a2eb', '#e0e0e0'],
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    cutout: '70%',
+    plugins: { legend: { position: 'bottom' } },
+    animation: false
   }
-}
+});
 
-// Fetch data and update the dashboard
-async function updateDashboard() {
-  try {
-    const data = await fetchData();
-
-    // Cap the displayed CO2 emissions to the maximum capacity (10 kg)
-    const co2Emissions = Math.min(data.co2_emissions, 10);
-
-    // Update UI text
-    document.getElementById('uptime').textContent = data.uptime.toFixed(2);
-    document.getElementById('energy').textContent = data.energy_kwh.toFixed(2);
-    document.getElementById('co2').textContent = co2Emissions.toFixed(2);
-
-    // Update the chart
-    updateChart(co2Emissions);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    document.getElementById('status').textContent = 'Error fetching data.';
-    document.getElementById('status').style.color = '#ff4d4d';
+// Chart #2 – CO₂ Emissions (Cumulative)
+const co2Chart = new Chart(co2Ctx, {
+  type: 'doughnut',
+  data: {
+    labels: ['CO2 Emitted (kg)', 'Remaining (max 3 kg)'],
+    datasets: [{
+      data: [0, 3],
+      backgroundColor: ['#ff6384', '#e0e0e0'],
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    cutout: '70%',
+    plugins: { legend: { position: 'bottom' } },
+    animation: false
   }
-}
+});
 
-// Initialize the dashboard
-updateDashboard();
+// Real-time listener
+ipcRenderer.on('power-data', (event, data) => {
+  const power = data.power_watts || 0;
+  const energy_wh = power / 3600;
+  const energy_kwh = energy_wh / 1000;
+
+  // Update totals
+  total_energy_kwh += energy_kwh;
+  total_co2 = total_energy_kwh * CO2_PER_KWH;
+
+  // Update HTML
+  document.getElementById('uptime').textContent = 'Live';
+  document.getElementById('energy').textContent = total_energy_kwh.toFixed(4);
+  document.getElementById('co2').textContent = total_co2.toFixed(4);
+  document.getElementById('status').textContent = `Live Power: ${power.toFixed(1)} W`;
+  document.getElementById('status').style.color = '#36a2eb';
+
+  // Update Charts
+  powerChart.data.datasets[0].data = [power, Math.max(0, 100 - power)];
+  powerChart.update();
+
+  const capped_co2 = Math.min(total_co2, 3);
+  co2Chart.data.datasets[0].data = [capped_co2, 3 - capped_co2];
+  co2Chart.update();
+});
