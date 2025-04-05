@@ -47,9 +47,27 @@
       font-weight: bold;
       color: #36a2eb;
     }
+
+    #logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      padding: 8px 16px;
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #logout-btn:hover {
+      background: #cc0000;
+    }
   </style>
 </head>
 <body>
+  <button id="logout-btn" onclick="logout()">Logout</button>
+
   <h1>Dramatic Carbon Emissions Dashboard</h1>
 
   <div class="charts">
@@ -71,6 +89,7 @@
     <p class="stat">CO₂ Emissions: <span id="co2">--</span> kg</p>
   </div>
 
+  <script src="index.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

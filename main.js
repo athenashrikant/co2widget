@@ -1,11 +1,11 @@
-// === main.js (Electron Main Process) ===
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 
 let mainWindow;
+let pythonProcess;
 
-app.whenReady().then(() => {
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
@@ -15,9 +15,24 @@ app.whenReady().then(() => {
     },
   });
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile('login.html');
 
-  const pythonProcess = spawn('python', [path.join(__dirname, 'adaptive_power_tracker.py')]);
+  ipcMain.on('login-success', () => {
+    mainWindow.loadFile('index.html');
+    if (!pythonProcess) startPythonProcess();
+  });
+
+  ipcMain.on('logout', () => {
+    mainWindow.loadFile('login.html');
+    if (pythonProcess) {
+      pythonProcess.kill();
+      pythonProcess = null;
+    }
+  });
+}
+
+function startPythonProcess() {
+  pythonProcess = spawn('python', [path.join(__dirname, 'adaptive_power_tracker.py')]);
 
   pythonProcess.stdout.on('data', (chunk) => {
     const lines = chunk.toString().split('\n');
@@ -27,7 +42,7 @@ app.whenReady().then(() => {
           const jsonData = JSON.parse(line);
           mainWindow.webContents.send('power-data', jsonData);
         } catch (e) {
-          console.error('Invalid JSON:', line);
+          console.error('Invalid JSON from Python:', line);
         }
       }
     });
@@ -37,7 +52,9 @@ app.whenReady().then(() => {
     console.error('Python stderr:', err.toString());
   });
 
-  pythonProcess.on('close', (code) => {
-    console.log(`Python script exited with code ${code}`);
+  pythonProcess.on('close', () => {
+    pythonProcess = null;
   });
-});
+}
+
+app.whenReady().then(createWindow);

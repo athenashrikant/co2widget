@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up</title>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial; text-align: center; padding: 40px; }
+    input { padding: 8px; margin: 8px; width: 250px; }
+    button { padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <h2>Create Your Account</h2>
+  <input id="email" type="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+  <button onclick="signup()">Sign Up</button><br>
+  <a href="login.html">Back to login</a><br>
+  <div id="message"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    window.onload = () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyDVNHHHN4UtYA8uQaL1n4oCWcI9_6E1gJ8",
+  authDomain: "wattaware-718b3.firebaseapp.com",
+  projectId: "wattaware-718b3",
+  storageBucket: "wattaware-718b3.firebasestorage.app",
+  messagingSenderId: "46958510191",
+  appId: "1:46958510191:web:9b259ae97ee67083d5cd9a",
+  measurementId: "G-XNLFX18H7L"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+
+      window.signup = async function () {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          localStorage.setItem("auth", "true");
+          ipcRenderer.send("login-success");
+        } catch (e) {
+          document.getElementById("message").innerText = e.message;
+        }
+      };
+    };
+  </script>
+</body>
+</html>
