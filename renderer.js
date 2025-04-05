@@ -2,14 +2,12 @@
 if (typeof ipcRenderer === 'undefined') {
   var { ipcRenderer } = require('electron');
 }
-console.log("✅ renderer.js loaded");
 
+console.log("✅ renderer.js loaded");
 
 const CO2_PER_KWH = 0.82;
 let total_energy_kwh = parseFloat(localStorage.getItem('energy_kwh')) || 0;
 let total_co2 = parseFloat(localStorage.getItem('co2_emissions')) || 0;
-
-
 // Firebase App via CDN
 const firebaseConfig = {
   apiKey: "AIzaSyDVNHHHN4UtYA8uQaL1n4oCWcI9_6E1gJ8",
@@ -23,6 +21,8 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+const deviceId = 'wattaware-laptop-001'; // You can make this dynamic if needed
 
 let lastPayload = {};
 
@@ -100,8 +100,9 @@ ipcRenderer.on('power-data', (event, data) => {
 setInterval(async () => {
   if (lastPayload && lastPayload.timestamp) {
     try {
-      await db.collection("laptop_power_logs").add(lastPayload);
-      console.log("✅ Sent to Firebase:", lastPayload);
+      const docRef = db.collection('laptop_power_logs').doc(deviceId);
+      await docRef.set(lastPayload, { merge: true });
+      console.log("✅ Updated Firebase for", deviceId, lastPayload);
     } catch (e) {
       console.error("❌ Firebase error:", e);
     }
