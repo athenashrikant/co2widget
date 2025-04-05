@@ -1,5 +1,7 @@
 const { ipcRenderer } = require('electron');
 
+console.log("✅ renderer.js loaded");
+
 const CO2_PER_KWH = 0.82;
 let total_energy_kwh = 0;
 let total_co2 = 0;
@@ -44,27 +46,29 @@ const co2Chart = new Chart(co2Ctx, {
   }
 });
 
-// Real-time listener
+// Real-time power data listener
 ipcRenderer.on('power-data', (event, data) => {
+  console.log("📡 Received power-data:", data);
+
   const power = data.power_watts || 0;
-  const energy_wh = power / 3600;
+  const energy_wh = power / 3600; // energy in watt-hours per second
   const energy_kwh = energy_wh / 1000;
 
-  // Update totals
   total_energy_kwh += energy_kwh;
   total_co2 = total_energy_kwh * CO2_PER_KWH;
 
-  // Update HTML
+  // Update status display
   document.getElementById('uptime').textContent = 'Live';
   document.getElementById('energy').textContent = total_energy_kwh.toFixed(4);
   document.getElementById('co2').textContent = total_co2.toFixed(4);
   document.getElementById('status').textContent = `Live Power: ${power.toFixed(1)} W`;
   document.getElementById('status').style.color = '#36a2eb';
 
-  // Update Charts
+  // Update power chart
   powerChart.data.datasets[0].data = [power, Math.max(0, 100 - power)];
   powerChart.update();
 
+  // Update CO2 chart (cap at 3kg visual max)
   const capped_co2 = Math.min(total_co2, 3);
   co2Chart.data.datasets[0].data = [capped_co2, 3 - capped_co2];
   co2Chart.update();

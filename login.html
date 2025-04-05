@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
   <meta charset="UTF-8" />
+  <title>Login</title>
   <style>
     body { font-family: Arial; text-align: center; padding: 40px; }
     input { padding: 8px; margin: 8px; width: 250px; }
@@ -10,69 +10,68 @@
   </style>
 </head>
 <body>
-  <h2>Login to Your Dashboard</h2>
-  <input id="email" type="email" placeholder="Email"><br>
-  <input id="password" type="password" placeholder="Password"><br>
+  <h2>Login to WattAware</h2>
+  <input id="email" type="email" placeholder="Email" /><br>
+  <input id="password" type="password" placeholder="Password" /><br>
   <button onclick="login()">Login</button>
-  <button onclick="googleLogin()">Sign in with Google</button><br>
+  <button onclick="googleLogin()">Google Login</button><br>
   <a href="signup.html">Create account</a> |
   <a href="#" onclick="resetPassword()">Forgot password?</a><br>
   <div id="message"></div>
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
   <script>
     const { ipcRenderer } = require('electron');
 
-    window.onload = () => {
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "your-project.firebaseapp.com",
-        projectId: "your-project",
-        storageBucket: "your-project.appspot.com",
-        messagingSenderId: "1234567890",
-        appId: "1:1234567890:web:abc123def456"
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const provider = new firebase.auth.GoogleAuthProvider();
-
-      window.login = async function () {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        try {
-          await auth.signInWithEmailAndPassword(email, password);
-          localStorage.setItem("auth", "true");
-          ipcRenderer.send("login-success");
-        } catch (e) {
-          document.getElementById("message").innerText = e.message;
-        }
-      };
-
-      window.googleLogin = async function () {
-        try {
-          await auth.signInWithPopup(provider);
-          localStorage.setItem("auth", "true");
-          ipcRenderer.send("login-success");
-        } catch (e) {
-          document.getElementById("message").innerText = e.message;
-        }
-      };
-
-      window.resetPassword = async function () {
-        const email = prompt("Enter your email to reset password:");
-        if (email) {
-          try {
-            await auth.sendPasswordResetEmail(email);
-            alert("Password reset link sent.");
-          } catch (e) {
-            alert(e.message);
-          }
-        }
-      };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVNHHHN4UtYA8uQaL1n4oCWcI9_6E1gJ8",
+      authDomain: "wattaware-718b3.firebaseapp.com",
+      projectId: "wattaware-718b3",
+      storageBucket: "wattaware-718b3.appspot.com",
+      messagingSenderId: "46958510191",
+      appId: "1:46958510191:web:9b259ae97ee67083d5cd9a",
+      measurementId: "G-XNLFX18H7L"
     };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        localStorage.setItem('auth', 'true');
+        ipcRenderer.send('login-success');
+      } catch (error) {
+        document.getElementById('message').innerText = error.message;
+      }
+    }
+
+    async function googleLogin() {
+      try {
+        await auth.signInWithPopup(provider);
+        localStorage.setItem('auth', 'true');
+        ipcRenderer.send('login-success');
+      } catch (error) {
+        document.getElementById('message').innerText = error.message;
+      }
+    }
+
+    async function resetPassword() {
+      const email = prompt("Enter your email to reset password:");
+      if (email) {
+        try {
+          await auth.sendPasswordResetEmail(email);
+          alert("Password reset link sent.");
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+    }
   </script>
 </body>
 </html>
