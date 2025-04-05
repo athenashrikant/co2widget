@@ -1,4 +1,8 @@
-const { ipcRenderer } = require('electron');
+// At the top
+if (typeof ipcRenderer === 'undefined') {
+  var { ipcRenderer } = require('electron');
+}
+
 
 console.log("✅ renderer.js loaded");
 
@@ -72,4 +76,11 @@ ipcRenderer.on('power-data', (event, data) => {
   const capped_co2 = Math.min(total_co2, 3);
   co2Chart.data.datasets[0].data = [capped_co2, 3 - capped_co2];
   co2Chart.update();
+  console.log("✅ renderer.js loaded");
+  console.log("✅ renderer.js loaded");
+  console.log("✅ renderer.js loaded");
+  console.log("✅ renderer.js loaded");
+  console.log("✅ renderer.js loaded");
+  console.log("✅ renderer.js loaded");
+
 });

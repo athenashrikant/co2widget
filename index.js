@@ -1,11 +1,9 @@
-const { ipcRenderer } = require('electron');
+// At the top
+if (typeof ipcRenderer === 'undefined') {
+    var { ipcRenderer } = require('electron');
+  }
+  
 
-// Redirect to login if user is not authenticated
-if (!localStorage.getItem("auth")) {
-  ipcRenderer.send('logout');
-}
-
-// Logout handler
 window.logout = function () {
   localStorage.removeItem("auth");
   ipcRenderer.send('logout');
