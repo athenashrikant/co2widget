@@ -10,6 +10,7 @@
     "electron": "^33.2.0"
   },
   "dependencies": {
-    "firebase": "^11.6.0"
+    "firebase": "^11.6.0",
+    "node-machine-id": "^1.1.12"
   }
 }
