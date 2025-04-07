@@ -1,21 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Sign Up</title>
   <style>
-    body { font-family: Arial; text-align: center; padding: 40px; }
-    input { padding: 8px; margin: 8px; width: 250px; }
-    button { padding: 10px 20px; }
+    :root {
+      --bg: #f3f4f6;
+      --fg: #111827;
+      --card-bg: #fff;
+      --input-bg: #fff;
+      --input-fg: #111827;
+      --link: #2563eb;
+      --button-bg: #10b981;
+      --button-fg: #fff;
+    }
+
+    body.dark {
+      --bg: #111827;
+      --fg: #f3f4f6;
+      --card-bg: #1f2937;
+      --input-bg: #374151;
+      --input-fg: #f3f4f6;
+      --link: #3b82f6;
+      --button-bg: #059669;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .toggle-theme {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 36px;
+      text-align: center;
+      padding: 0;
+    }
+
+    .signup-container {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 1.5rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--input-fg);
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--link);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 1rem;
+      border: none;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: var(--button-bg);
+      color: var(--button-fg);
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .links {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .links a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    .links a:hover {
+      text-decoration: underline;
+    }
+
+    #message {
+      margin-top: 1rem;
+      color: red;
+    }
   </style>
 </head>
 <body>
-  <h2>Create Your WattAware Account</h2>
-  <input id="email" type="email" placeholder="Email" /><br>
-  <input id="password" type="password" placeholder="Password" /><br>
-  <button onclick="signup()">Sign Up</button><br>
-  <a href="login.html">Back to Login</a><br>
-  <div id="message"></div>
+  <button class="toggle-theme" onclick="toggleTheme()">☾</button>
+
+  <div class="signup-container">
+    <h2>Create Your WattAware Account</h2>
+    <input id="email" type="email" placeholder="Email" />
+
+    <div class="password-wrapper">
+      <input id="password" type="password" placeholder="Password" />
+    </div>
+
+    <button onclick="signup()">Sign Up</button>
+
+    <div class="links">
+      <a href="login.html">Back to Login</a>
+    </div>
+
+    <div id="message"></div>
+  </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -46,6 +182,22 @@
       } catch (error) {
         document.getElementById('message').innerText = error.message;
       }
+    }
+
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const toggleBtn = document.querySelector(".toggle-password");
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleBtn.innerText = "Hide";
+      } else {
+        passwordInput.type = "password";
+        toggleBtn.innerText = "Show";
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
     }
   </script>
 </body>

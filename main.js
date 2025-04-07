@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 
+
 let mainWindow;
 let pythonProcess;
 let lastPowerData = null; // Store last JSON to resend after load

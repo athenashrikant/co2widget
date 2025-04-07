@@ -111,4 +111,4 @@ setInterval(async () => {
       console.error("❌ Firebase error:", e);
     }
   }
-}, 30000);
+}, 3000);
