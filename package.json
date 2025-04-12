@@ -10,7 +10,7 @@
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "elctron": "0.0.1-security",
+    "electron": "^33.2.0",
     "firebase": "^11.6.0",
     "node-machine-id": "^1.1.12"
   }
