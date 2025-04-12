@@ -7,7 +7,7 @@ const { machineIdSync } = require('node-machine-id');
 
 console.log("✅ renderer.js loaded");
 
-const CO2_PER_KWH = 0.82;
+const CO2_PER_KWH = 1.8;
 let total_energy_kwh = parseFloat(localStorage.getItem('energy_kwh')) || 0;
 let total_co2 = parseFloat(localStorage.getItem('co2_emissions')) || 0;
 
@@ -55,7 +55,7 @@ const co2Chart = new Chart(co2Ctx, {
   data: {
     labels: ['CO2 Emitted (kg)', 'Remaining to 100kg'],
     datasets: [{
-      data: [0, 100],
+      data: [0, 10],
       backgroundColor: ['#ff6384', '#e0e0e0'],
       borderWidth: 2,
     }]
