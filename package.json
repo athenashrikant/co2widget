@@ -1,17 +1,39 @@
 {
   "name": "co2widget",
   "version": "1.0.0",
+  "description": "CO2 and power tracking Electron app",
+  "author": "",
   "main": "main.js",
   "license": "MIT",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build:win": "electron-builder --win"
   },
   "devDependencies": {
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "electron": "^33.2.0"
   },
   "dependencies": {
-    "electron": "^33.2.0",
     "firebase": "^11.6.0",
     "node-machine-id": "^1.1.12"
+  },
+  "build": {
+    "appId": "com.co2widget.app",
+    "productName": "CO2Widget",
+    "files": [
+      "**/*",
+      "!node_modules/.cache/**"
+    ],
+    "extraResources": [
+      "adaptive_power_tracker.py"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "portable",
+        "zip"
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
   }
 }
