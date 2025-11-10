@@ -44,8 +44,15 @@ app.whenReady().then(() => {
 
   // Launch login window
   mainWindow = new BrowserWindow({
-    width: 1000,
+width: 1200,
     height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    resizable: true,        // ✅ make window resizable
+    frame: false,           // remove default OS frame
+    titleBarStyle: 'hiddenInset',
+    backgroundColor: '#f8f8f8',
+    autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

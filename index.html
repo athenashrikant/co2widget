@@ -2,73 +2,209 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Wattaware</title>
+  <title>Wattaware | Carbon Emissions Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #f9f9f9, #e0e0e0);
-      text-align: center;
-      padding: 30px;
+    /* Title bar (draggable area) */
+      .titlebar {
+        -webkit-app-region: drag;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 14px 14px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+      }
+
+      /* Left-side window controls */
+      .window-controls {
+        display: flex;
+        gap: 8px;
+        -webkit-app-region: no-drag;
+      }
+
+      /* Circular mac-style buttons */
+      .window-controls button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+      }
+
+      .close {
+        background: #ff5f57;
+      }
+      .minimize {
+        background: #febc2e;
+      }
+      .maximize {
+        background: #28c840;
+      }
+
+      /* Optional hover effects */
+      .window-controls button:hover {
+        opacity: 0.8;
+      }
+
+      /* App title text */
+      .app-title {
+        font-family: sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        color: #333;
+      }
+
+      /* Page body content */
+      body {
+        margin: 0;
+        padding-top: 40px; /* so content doesn't go under the titlebar */
+        font-family: sans-serif;
+      }
+    /* --- Base Reset --- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    h1 { color: #333; }
+    /* --- Apple-Inspired Layout --- */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f8f8f8, #e9ecef);
+      color: #1c1c1e;
+      text-align: center;
+      padding: 50px;
+      min-height: 100vh;
+      transition: background 0.5s ease;
+    }
 
+    h1 {
+      font-weight: 600;
+      font-size: 2.4rem;
+      color: #111;
+      margin-bottom: 50px;
+      letter-spacing: -0.4px;
+      display: inline-block;
+      border-right: 3px solid #007aff; /* typing cursor */
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    /* --- Charts Layout --- */
     .charts {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 50px;
-      margin: 40px auto;
+      gap: 70px;
+      margin-bottom: 60px;
     }
 
     canvas {
-      width: 300px !important;
-      height: 300px !important;
+      width: 360px !important;
+      height: 360px !important;
+      background: white;
+      border-radius: 26px;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.08);
+      padding: 25px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
+    canvas:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    }
+
+    p strong {
+      display: block;
+      margin-top: 18px;
+      font-weight: 500;
+      color: #333;
+      font-size: 1.25rem;
+    }
+
+    /* --- Info Card --- */
     .info {
-      background: white;
-      padding: 20px;
-      width: 320px;
-      margin: 20px auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 0.85);
+      padding: 32px;
+      width: 380px;
+      margin: 0 auto;
+      border-radius: 22px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+      backdrop-filter: blur(12px);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .info:hover {
+      box-shadow: 0 12px 36px rgba(0,0,0,0.12);
     }
 
     .stat {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin: 8px 0;
+      font-size: 1.1rem;
+      margin: 14px 0;
+      font-weight: 500;
     }
 
+    .stat span {
+      color: #007aff;
+      font-weight: 600;
+    }
+
+    /* --- Status --- */
     #status {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #36a2eb;
+      margin: 25px 0 35px;
+      font-weight: 500;
+      color: #007aff;
+      font-size: 1.1rem;
     }
 
+    /* --- Logout Button --- */
     #logout-btn {
       position: absolute;
-      top: 20px;
-      right: 30px;
-      padding: 8px 16px;
-      background: #ff4d4d;
+      top: 25px;
+      right: 40px;
+      padding: 10px 22px;
+      background: linear-gradient(to right, #007aff, #0a84ff);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 10px rgba(0,122,255,0.2);
+      transition: all 0.3s ease;
     }
 
     #logout-btn:hover {
-      background: #cc0000;
+      background: linear-gradient(to right, #0051cc, #007aff);
+      box-shadow: 0 6px 16px rgba(0,122,255,0.3);
+      transform: translateY(-2px);
     }
   </style>
 </head>
+
 <body>
+  <div class="titlebar">
+      <div class="window-controls">
+        <button id="close-btn" class="close"></button>
+        <button id="min-btn" class="minimize"></button>
+        <button id="max-btn" class="maximize"></button>
+      </div>
+      <span class="app-title">Wattaware Dashboard</span>
+    </div>
   <button id="logout-btn" onclick="logout()">Logout</button>
 
-  <h1>Dramatic Carbon Emissions Dashboard</h1>
+  <h1 id="typewriter"></h1>
 
   <div class="charts">
     <div>
@@ -88,13 +224,67 @@
     <p class="stat">Energy Usage: <span id="energy">--</span> kWh</p>
     <p class="stat">CO₂ Emissions: <span id="co2">--</span> kg</p>
   </div>
-  <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
   <script src="index.js"></script>
-  
   <script src="renderer.js"></script>
+
+  <script>
+    // --- Typing Animation ---
+    const titleElement = document.getElementById('typewriter');
+    const text1 = "Wattaware Carbon Emissions Dashboard";
+    const text2 = "💡 Did you know? The average household emits 2.7 tons of CO₂ per year!";
+
+    let index = 0;
+    let deleting = false;
+    let currentText = text1;
+
+    function typeEffect() {
+      titleElement.textContent = currentText.slice(0, index);
+
+      if (!deleting && index < currentText.length) {
+        index++;
+        setTimeout(typeEffect, 80);
+      } else if (!deleting && index === currentText.length) {
+        setTimeout(() => {
+          deleting = true;
+          setTimeout(typeEffect, 40);
+        }, 2000);
+      } else if (deleting && index > 0) {
+        index--;
+        setTimeout(typeEffect, 40);
+      } else if (deleting && index === 0) {
+        deleting = false;
+        currentText = currentText === text1 ? text2 : text1;
+        setTimeout(typeEffect, 200);
+      }
+    }
+
+    window.onload = () => {
+      titleElement.style.width = "auto";
+      typeEffect();
+    };
+
+    // Dummy logout function (replace with Firebase auth later)
+    function logout() {
+      alert("Logged out successfully!");
+
+    }
+      const { remote } = require("electron");
+      const currentWindow = remote.getCurrentWindow();
+
+      document.getElementById("close-btn").addEventListener("click", () => currentWindow.close());
+      document.getElementById("min-btn").addEventListener("click", () => currentWindow.minimize());
+      document.getElementById("max-btn").addEventListener("click", () => {
+        if (currentWindow.isMaximized()) {
+          currentWindow.unmaximize();
+        } else {
+          currentWindow.maximize();
+        }
+      });
+  </script>
 </body>
 </html>
