@@ -5,6 +5,86 @@
   <title>Wattaware</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+<<<<<<< Updated upstream
+=======
+    /* Title bar (draggable area) */
+      .titlebar {
+        -webkit-app-region: drag;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 14px 14px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+      }
+
+      /* Left-side window controls */
+      .window-controls {
+        display: flex;
+        gap: 8px;
+        -webkit-app-region: no-drag;
+      }
+
+      /* Circular mac-style buttons */
+      .window-controls button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+      }
+
+      .close {
+        background: #ff5f57;
+      }
+      .minimize {
+        background: #febc2e;
+      }
+      .maximize {
+        background: #28c840;
+      }
+
+      /* Optional hover effects */
+      .window-controls button:hover {
+        opacity: 0.8;
+      }
+
+      /* App title text */
+      .app-title {
+        font-family: sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        color: #333;
+      }
+
+      /* Page body content */
+      body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f8f8f8, #e9ecef);
+      color: #1c1c1e;
+      text-align: center;
+      padding: 90px;
+      min-height: 100vh;
+      transition: background 0.5s ease, padding 0.5s ease;
+      overflow-x: hidden;
+      }
+    /* --- Base Reset --- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* --- Apple-Inspired Layout --- */
+>>>>>>> Stashed changes
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #f9f9f9, #e0e0e0);
@@ -12,7 +92,22 @@
       padding: 30px;
     }
 
+<<<<<<< Updated upstream
     h1 { color: #333; }
+=======
+    h1 {
+     font-weight: 600;
+      font-size: clamp(1.8rem, 2.0vw, 2.4rem);
+      color: #111;
+      margin: 60px 0 40px;
+      letter-spacing: -0.4px;
+      display: inline-block;
+      border-right: 3px solid var(--primary);
+      white-space: nowrap;
+      overflow: hidden;
+      max-width: 90vw;
+    }
+>>>>>>> Stashed changes
 
     .charts {
       display: flex;
@@ -27,6 +122,7 @@
       height: 300px !important;
     }
 
+<<<<<<< Updated upstream
     .info {
       background: white;
       padding: 20px;
@@ -34,6 +130,34 @@
       margin: 20px auto;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+=======
+    canvas:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    }
+
+    p strong {
+        display: block;
+      margin-top: 18px;
+      font-weight: 500;
+      color: #333;
+      font-size: clamp(0.9rem, 1.2vw, 1.25rem);
+    }
+
+    /* --- Info Card --- */
+    .info {
+       background: rgba(255, 255, 255, 0.85);
+      padding: clamp(16px, 3vw, 32px);
+      width: clamp(250px, 30vw, 380px);
+      margin: 0 auto;
+      border-radius: 22px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .info:hover {
+      box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+>>>>>>> Stashed changes
     }
 
     .stat {
@@ -63,6 +187,23 @@
     #logout-btn:hover {
       background: #cc0000;
     }
+    /* --- Blinking Cursor Animation --- */
+@keyframes blink {
+  0%, 50%, 100% {
+    border-color: transparent;
+  }
+  25%, 75% {
+    border-color: #007aff;
+  }
+}
+
+/* Apply animation to the typewriter text */
+#typewriter {
+  border-right: 3px solid #007aff;
+  animation: blink 1s step-end infinite;
+}
+
+       
   </style>
 </head>
 <body>
@@ -96,5 +237,99 @@
   <script src="index.js"></script>
   
   <script src="renderer.js"></script>
+<<<<<<< Updated upstream
+=======
+
+  <script>
+    // --- Typing Animation ---
+    const titleElement = document.getElementById('typewriter');
+    const text1 = "Wattaware Carbon Emissions Dashboard";
+    const text2 = "💡 Did you know? The average household emits 2.7 tons of CO₂ per year!";
+
+    let index = 0;
+    let deleting = false;
+    let currentText = text1;
+    let cursorBlinking = false;
+    let blinkInterval;
+
+    function startBlinking() {
+      if (!cursorBlinking) {
+        cursorBlinking = true;
+        titleElement.style.animation = "blink 1s step-end infinite";
+      }
+    }
+
+    function stopBlinking() {
+      cursorBlinking = false;
+      titleElement.style.animation = "none";
+      titleElement.style.borderRight = "3px solid #007aff";
+    }
+
+    function typeEffect() {
+      titleElement.textContent = currentText.slice(0, index);
+
+      if (!deleting && index < currentText.length) {
+        stopBlinking();
+        index++;
+        setTimeout(typeEffect, 80);
+      } else if (!deleting && index === currentText.length) {
+        startBlinking();
+        setTimeout(() => {
+          deleting = true;
+          setTimeout(typeEffect, 80);
+        }, 2000);
+      } else if (deleting && index > 0) {
+        stopBlinking();
+        index--;
+        setTimeout(typeEffect, 40);
+      } else if (deleting && index === 0) {
+        deleting = false;
+        currentText = currentText === text1 ? text2 : text1;
+        setTimeout(typeEffect, 300);
+      }
+    }
+
+    function typeEffect() {
+      titleElement.textContent = currentText.slice(0, index);
+
+      if (!deleting && index < currentText.length) {
+        index++;
+        setTimeout(typeEffect, 80);
+      } else if (!deleting && index === currentText.length) {
+        setTimeout(() => {
+          deleting = true;
+          setTimeout(typeEffect, 40);
+        }, 2000);
+      } else if (deleting && index > 0) {
+        index--;
+        setTimeout(typeEffect, 40);
+      } else if (deleting && index === 0) {
+        deleting = false;
+        currentText = currentText === text1 ? text2 : text1;
+        setTimeout(typeEffect, 200);
+      }
+    }
+
+    window.onload = () => {
+      titleElement.style.width = "auto";
+      typeEffect();
+    };
+
+    // Dummy logout function (replace with Firebase auth later)
+    function logout() {
+      alert("Logged out successfully!");
+
+    }
+    
+    
+        const { remote } = require("electron");
+    const currentWindow = remote.getCurrentWindow();
+    document.getElementById("close-btn").addEventListener("click", () => currentWindow.close());
+    document.getElementById("min-btn").addEventListener("click", () => currentWindow.minimize());
+    document.getElementById("max-btn").addEventListener("click", () =>
+      currentWindow.isMaximized() ? currentWindow.unmaximize() : currentWindow.maximize()
+    );
+  </script>
+>>>>>>> Stashed changes
 </body>
 </html>
