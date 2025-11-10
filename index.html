@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Wattaware</title>
+  <title>Wattaware | Carbon Emissions Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <style>
     /* Title bar (draggable area) */
       .titlebar {
@@ -65,14 +67,9 @@
 
       /* Page body content */
       body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #f8f8f8, #e9ecef);
-      color: #1c1c1e;
-      text-align: center;
-      padding: 90px;
-      min-height: 100vh;
-      transition: background 0.5s ease, padding 0.5s ease;
-      overflow-x: hidden;
+        margin: 0;
+        padding-top: 40px; /* so content doesn't go under the titlebar */
+        font-family: sans-serif;
       }
     /* --- Base Reset --- */
     * {
@@ -83,36 +80,44 @@
 
     /* --- Apple-Inspired Layout --- */
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #f9f9f9, #e0e0e0);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f8f8f8, #e9ecef);
+      color: #1c1c1e;
       text-align: center;
-      padding: 30px;
+      padding: 50px;
+      min-height: 100vh;
+      transition: background 0.5s ease;
     }
 
     h1 {
-     font-weight: 600;
-      font-size: clamp(1.8rem, 2.0vw, 2.4rem);
+      font-weight: 600;
+      font-size: 2.4rem;
       color: #111;
-      margin: 60px 0 40px;
+      margin-bottom: 50px;
       letter-spacing: -0.4px;
       display: inline-block;
-      border-right: 3px solid var(--primary);
+      border-right: 3px solid #007aff; /* typing cursor */
       white-space: nowrap;
       overflow: hidden;
-      max-width: 90vw;
     }
 
+    /* --- Charts Layout --- */
     .charts {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 50px;
-      margin: 40px auto;
+      gap: 70px;
+      margin-bottom: 60px;
     }
 
     canvas {
-      width: 300px !important;
-      height: 300px !important;
+      width: 360px !important;
+      height: 360px !important;
+      background: white;
+      border-radius: 26px;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.08);
+      padding: 25px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     canvas:hover {
@@ -121,22 +126,23 @@
     }
 
     p strong {
-        display: block;
+      display: block;
       margin-top: 18px;
       font-weight: 500;
       color: #333;
-      font-size: clamp(0.9rem, 1.2vw, 1.25rem);
+      font-size: 1.25rem;
     }
 
     /* --- Info Card --- */
     .info {
-       background: rgba(255, 255, 255, 0.85);
-      padding: clamp(16px, 3vw, 32px);
-      width: clamp(250px, 30vw, 380px);
+      background: rgba(255, 255, 255, 0.85);
+      padding: 32px;
+      width: 380px;
       margin: 0 auto;
       border-radius: 22px;
       box-shadow: 0 8px 28px rgba(0,0,0,0.08);
       backdrop-filter: blur(12px);
+      transition: box-shadow 0.3s ease;
     }
 
     .info:hover {
@@ -144,55 +150,61 @@
     }
 
     .stat {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin: 8px 0;
+      font-size: 1.1rem;
+      margin: 14px 0;
+      font-weight: 500;
     }
 
+    .stat span {
+      color: #007aff;
+      font-weight: 600;
+    }
+
+    /* --- Status --- */
     #status {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #36a2eb;
+      margin: 25px 0 35px;
+      font-weight: 500;
+      color: #007aff;
+      font-size: 1.1rem;
     }
 
+    /* --- Logout Button --- */
     #logout-btn {
       position: absolute;
-      top: 20px;
-      right: 30px;
-      padding: 8px 16px;
-      background: #ff4d4d;
+      top: 25px;
+      right: 40px;
+      padding: 10px 22px;
+      background: linear-gradient(to right, #007aff, #0a84ff);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 10px rgba(0,122,255,0.2);
+      transition: all 0.3s ease;
     }
 
     #logout-btn:hover {
-      background: #cc0000;
+      background: linear-gradient(to right, #0051cc, #007aff);
+      box-shadow: 0 6px 16px rgba(0,122,255,0.3);
+      transform: translateY(-2px);
     }
-    /* --- Blinking Cursor Animation --- */
-@keyframes blink {
-  0%, 50%, 100% {
-    border-color: transparent;
-  }
-  25%, 75% {
-    border-color: #007aff;
-  }
-}
-
-/* Apply animation to the typewriter text */
-#typewriter {
-  border-right: 3px solid #007aff;
-  animation: blink 1s step-end infinite;
-}
-
-       
   </style>
 </head>
+
 <body>
+  <div class="titlebar">
+      <div class="window-controls">
+        <button id="close-btn" class="close"></button>
+        <button id="min-btn" class="minimize"></button>
+        <button id="max-btn" class="maximize"></button>
+      </div>
+      <span class="app-title">Wattaware Dashboard</span>
+    </div>
   <button id="logout-btn" onclick="logout()">Logout</button>
 
-  <h1>Dramatic Carbon Emissions Dashboard</h1>
+  <h1 id="typewriter"></h1>
 
   <div class="charts">
     <div>
@@ -212,13 +224,12 @@
     <p class="stat">Energy Usage: <span id="energy">--</span> kWh</p>
     <p class="stat">CO₂ Emissions: <span id="co2">--</span> kg</p>
   </div>
-  <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
   <script src="index.js"></script>
-  
   <script src="renderer.js"></script>
 
   <script>
@@ -230,45 +241,6 @@
     let index = 0;
     let deleting = false;
     let currentText = text1;
-    let cursorBlinking = false;
-    let blinkInterval;
-
-    function startBlinking() {
-      if (!cursorBlinking) {
-        cursorBlinking = true;
-        titleElement.style.animation = "blink 1s step-end infinite";
-      }
-    }
-
-    function stopBlinking() {
-      cursorBlinking = false;
-      titleElement.style.animation = "none";
-      titleElement.style.borderRight = "3px solid #007aff";
-    }
-
-    function typeEffect() {
-      titleElement.textContent = currentText.slice(0, index);
-
-      if (!deleting && index < currentText.length) {
-        stopBlinking();
-        index++;
-        setTimeout(typeEffect, 80);
-      } else if (!deleting && index === currentText.length) {
-        startBlinking();
-        setTimeout(() => {
-          deleting = true;
-          setTimeout(typeEffect, 80);
-        }, 2000);
-      } else if (deleting && index > 0) {
-        stopBlinking();
-        index--;
-        setTimeout(typeEffect, 40);
-      } else if (deleting && index === 0) {
-        deleting = false;
-        currentText = currentText === text1 ? text2 : text1;
-        setTimeout(typeEffect, 300);
-      }
-    }
 
     function typeEffect() {
       titleElement.textContent = currentText.slice(0, index);
@@ -301,15 +273,18 @@
       alert("Logged out successfully!");
 
     }
-    
-    
-        const { remote } = require("electron");
-    const currentWindow = remote.getCurrentWindow();
-    document.getElementById("close-btn").addEventListener("click", () => currentWindow.close());
-    document.getElementById("min-btn").addEventListener("click", () => currentWindow.minimize());
-    document.getElementById("max-btn").addEventListener("click", () =>
-      currentWindow.isMaximized() ? currentWindow.unmaximize() : currentWindow.maximize()
-    );
+      const { remote } = require("electron");
+      const currentWindow = remote.getCurrentWindow();
+
+      document.getElementById("close-btn").addEventListener("click", () => currentWindow.close());
+      document.getElementById("min-btn").addEventListener("click", () => currentWindow.minimize());
+      document.getElementById("max-btn").addEventListener("click", () => {
+        if (currentWindow.isMaximized()) {
+          currentWindow.unmaximize();
+        } else {
+          currentWindow.maximize();
+        }
+      });
   </script>
 </body>
 </html>
