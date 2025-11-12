@@ -64,6 +64,9 @@ app.whenReady().then(() => {
 			nodeIntegration: true,
 			contextIsolation: false,
 		},
+		 autoHideMenuBar: true,
+		 titleBarStyle: 'hidden', // 👈 Hides the menu bar automatically
+
 	});
 
 	mainWindow.loadFile('login.html');
@@ -92,4 +95,22 @@ app.whenReady().then(() => {
 			pythonProcess = null;
 		}
 	});
+	ipcMain.on("window-control", (event, action) => {
+  const window = BrowserWindow.getFocusedWindow();
+  if (!window) return;
+
+  switch (action) {
+    case "minimize":
+      window.minimize();
+      break;
+    case "maximize":
+      if (window.isMaximized()) window.unmaximize();
+      else window.maximize();
+      break;
+    case "close":
+      window.close();
+      break;
+  }
+});
+
 });

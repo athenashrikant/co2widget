@@ -279,11 +279,6 @@
       document.getElementById("close-btn").addEventListener("click", () => currentWindow.close());
       document.getElementById("min-btn").addEventListener("click", () => currentWindow.minimize());
       document.getElementById("max-btn").addEventListener("click", () => {
-        if (currentWindow.isMaximized()) {
-          currentWindow.unmaximize();
-        } else {
-          currentWindow.maximize();
-        }
       });
   </script>
 </body>
