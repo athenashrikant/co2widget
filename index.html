@@ -2,284 +2,517 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wattaware | Carbon Emissions Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+
+  <!-- Firebase compat SDKs (CDN, same as your original) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Title bar (draggable area) */
-      .titlebar {
-        -webkit-app-region: drag;
-        height: 40px;
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(12px);
-        border-radius: 14px 14px 0 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 12px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-      }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-      /* Left-side window controls */
-      .window-controls {
-        display: flex;
-        gap: 8px;
-        -webkit-app-region: no-drag;
-      }
-
-      /* Circular mac-style buttons */
-      .window-controls button {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-      }
-
-      .close {
-        background: #ff5f57;
-      }
-      .minimize {
-        background: #febc2e;
-      }
-      .maximize {
-        background: #28c840;
-      }
-
-      /* Optional hover effects */
-      .window-controls button:hover {
-        opacity: 0.8;
-      }
-
-      /* App title text */
-      .app-title {
-        font-family: sans-serif;
-        font-weight: 500;
-        font-size: 14px;
-        color: #333;
-      }
-
-      /* Page body content */
-      body {
-        margin: 0;
-        padding-top: 40px; /* so content doesn't go under the titlebar */
-        font-family: sans-serif;
-      }
-    /* --- Base Reset --- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    /* --- Apple-Inspired Layout --- */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #f8f8f8, #e9ecef);
+      background: #f0f2f5;
       color: #1c1c1e;
-      text-align: center;
-      padding: 50px;
       min-height: 100vh;
-      transition: background 0.5s ease;
     }
 
-    h1 {
-      font-weight: 600;
-      font-size: 2.4rem;
-      color: #111;
-      margin-bottom: 50px;
-      letter-spacing: -0.4px;
-      display: inline-block;
-      border-right: 3px solid #007aff; /* typing cursor */
-      white-space: nowrap;
-      overflow: hidden;
-    }
-
-    /* --- Charts Layout --- */
-    .charts {
+    /* ── Titlebar ── */
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 44px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 70px;
-      margin-bottom: 60px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+    }
+    .window-controls { display: flex; gap: 8px; -webkit-app-region: no-drag; align-items: center; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; -webkit-app-region: no-drag; }
+    .dot:hover { opacity: 0.75; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .app-name { font-size: 13px; font-weight: 500; color: #555; display: flex; align-items: center; gap: 6px; }
+    .logout-btn {
+      -webkit-app-region: no-drag;
+      font-size: 12px; padding: 6px 14px;
+      background: transparent; border: 1px solid #d1d5db;
+      border-radius: 8px; cursor: pointer; color: #555;
+      font-family: inherit; display: flex; align-items: center; gap: 5px;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
+
+    /* ── Main Layout ── */
+    .main {
+      margin-top: 44px;
+      padding: 20px 24px 24px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    canvas {
-      width: 360px !important;
-      height: 360px !important;
-      background: white;
-      border-radius: 26px;
-      box-shadow: 0 8px 26px rgba(0,0,0,0.08);
-      padding: 25px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+    /* ── Hero ── */
+    .hero { text-align: center; margin-bottom: 18px; padding-top: 6px; }
+    .hero h1 { font-size: 20px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .hero p  { font-size: 12px; color: #6b7280; }
+    .status-bar { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; transition: background 0.4s; }
+    .status-dot.live { background: #28c840; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .status-txt { font-size: 12px; color: #6b7280; }
 
-    canvas:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    /* ── Metric Cards ── */
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .metric-card {
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 14px; padding: 16px;
     }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .metric-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .mi-blue   { background: #eff6ff; color: #2563eb; }
+    .mi-red    { background: #fef2f2; color: #dc2626; }
+    .mi-green  { background: #f0fdf4; color: #16a34a; }
+    .mi-amber  { background: #fffbeb; color: #d97706; }
+    .method-badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; background: #f3f4f6; color: #6b7280; }
+    .metric-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .metric-val   { font-size: 26px; font-weight: 600; color: #111; line-height: 1; }
+    .metric-unit  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
 
-    p strong {
-      display: block;
-      margin-top: 18px;
-      font-weight: 500;
-      color: #333;
-      font-size: 1.25rem;
-    }
+    /* ── Chart Cards ── */
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .chart-card  { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .card-title  { font-size: 13px; font-weight: 500; color: #111; display: flex; align-items: center; gap: 6px; }
+    .badge       { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+    .badge-blue  { background: #eff6ff; color: #2563eb; }
+    .badge-red   { background: #fef2f2; color: #dc2626; }
+    .chart-wrap  { position: relative; width: 100%; }
+    .h190 { height: 190px; }
+    .h160 { height: 160px; }
 
-    /* --- Info Card --- */
-    .info {
-      background: rgba(255, 255, 255, 0.85);
-      padding: 32px;
-      width: 380px;
-      margin: 0 auto;
-      border-radius: 22px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
-      backdrop-filter: blur(12px);
-      transition: box-shadow 0.3s ease;
-    }
+    .legend-row-h { display: flex; gap: 14px; margin-bottom: 8px; }
+    .legend-item  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; }
+    .legend-sq    { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
-    .info:hover {
-      box-shadow: 0 12px 36px rgba(0,0,0,0.12);
-    }
+    /* ── Bottom Row ── */
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .small-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; }
 
-    .stat {
-      font-size: 1.1rem;
-      margin: 14px 0;
-      font-weight: 500;
-    }
+    /* Donut legend */
+    .donut-legend { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+    .dl-row   { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+    .dl-label { display: flex; align-items: center; gap: 6px; color: #6b7280; }
+    .dl-val   { font-weight: 500; color: #111; }
 
-    .stat span {
-      color: #007aff;
-      font-weight: 600;
-    }
+    /* Heatmap */
+    .hm-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 4px; }
+    .hm-day  { font-size: 10px; color: #9ca3af; text-align: center; }
+    .heatmap { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+    .hm-cell { height: 15px; border-radius: 3px; cursor: default; }
+    .hm-legend { display: flex; align-items: center; gap: 5px; margin-top: 10px; }
+    .hm-lbl    { font-size: 10px; color: #9ca3af; }
+    .hm-swatch { width: 14px; height: 8px; border-radius: 2px; }
 
-    /* --- Status --- */
-    #status {
-      margin: 25px 0 35px;
-      font-weight: 500;
-      color: #007aff;
-      font-size: 1.1rem;
-    }
+    /* Insights */
+    .insight-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f3f4f6; }
+    .insight-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .insight-icon { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+    .insight-txt  { font-size: 12px; color: #6b7280; line-height: 1.55; }
+    .insight-txt strong { color: #111; font-weight: 500; }
+    .progress-bar  { height: 4px; background: #f3f4f6; border-radius: 2px; margin-top: 5px; }
+    .progress-fill { height: 100%; border-radius: 2px; }
 
-    /* --- Logout Button --- */
-    #logout-btn {
-      position: absolute;
-      top: 25px;
-      right: 40px;
-      padding: 10px 22px;
-      background: linear-gradient(to right, #007aff, #0a84ff);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 0.95rem;
-      box-shadow: 0 4px 10px rgba(0,122,255,0.2);
-      transition: all 0.3s ease;
-    }
-
-    #logout-btn:hover {
-      background: linear-gradient(to right, #0051cc, #007aff);
-      box-shadow: 0 6px 16px rgba(0,122,255,0.3);
-      transform: translateY(-2px);
-    }
+    /* Firebase sync indicator */
+    .sync-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+    .sync-ok  { background: #f0fdf4; color: #16a34a; }
+    .sync-err { background: #fef2f2; color: #dc2626; }
   </style>
 </head>
 
 <body>
+
+  <!-- Titlebar -->
   <div class="titlebar">
-      <div class="window-controls">
-        <button id="close-btn" class="close"></button>
-        <button id="min-btn" class="minimize"></button>
-        <button id="max-btn" class="maximize"></button>
+    <div class="window-controls">
+      <div class="dot dot-r" id="close-btn" title="Close"></div>
+      <div class="dot dot-y" id="min-btn" title="Minimize"></div>
+      <div class="dot dot-g" id="max-btn" title="Maximize"></div>
+    </div>
+    <div class="app-name">
+      <i class="ti ti-bolt"></i> Wattaware Dashboard
+    </div>
+    <button class="logout-btn" id="logout-btn">
+      <i class="ti ti-logout"></i> Logout
+    </button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Carbon Emissions Monitor</h1>
+      <p>Real-time energy &amp; CO₂ tracking via system power sensor</p>
+      <div class="status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="status-txt" id="status-txt">Waiting for data...</span>
+        <span class="sync-badge sync-ok" id="sync-badge" style="display:none">Firebase OK</span>
       </div>
-      <span class="app-title">Wattaware Dashboard</span>
     </div>
-  <button id="logout-btn" onclick="logout()">Logout</button>
 
-  <h1 id="typewriter"></h1>
-
-  <div class="charts">
-    <div>
-      <canvas id="powerChart"></canvas>
-      <p><strong>Power Output</strong></p>
+    <!-- Metric Cards -->
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon mi-blue"><i class="ti ti-bolt"></i></div>
+          <span class="method-badge" id="method-badge">—</span>
+        </div>
+        <div class="metric-label">Live Power</div>
+        <div class="metric-val"><span id="m-power">—</span></div>
+        <div class="metric-unit">Watts</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon mi-red"><i class="ti ti-cloud"></i></div>
+        </div>
+        <div class="metric-label">CO₂ Emitted</div>
+        <div class="metric-val"><span id="m-co2">—</span></div>
+        <div class="metric-unit">kg (session)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon mi-green"><i class="ti ti-plug"></i></div>
+        </div>
+        <div class="metric-label">Energy Used</div>
+        <div class="metric-val"><span id="m-energy">—</span></div>
+        <div class="metric-unit">kWh (session)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon mi-amber"><i class="ti ti-clock"></i></div>
+        </div>
+        <div class="metric-label">Session</div>
+        <div class="metric-val"><span id="m-uptime">00:00</span></div>
+        <div class="metric-unit">hh:mm</div>
+      </div>
     </div>
-    <div>
-      <canvas id="carbonChart"></canvas>
-      <p><strong>CO₂ Emissions</strong></p>
+
+    <!-- Charts Row -->
+    <div class="charts-grid">
+
+      <!-- Power Donut -->
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-activity"></i> Live power output</div>
+          <span class="badge badge-blue">Watts</span>
+        </div>
+        <div class="legend-row-h">
+          <div class="legend-item"><span class="legend-sq" style="background:#2563eb"></span>Current (W)</div>
+          <div class="legend-item"><span class="legend-sq" style="background:#e5e7eb"></span>Headroom</div>
+        </div>
+        <div class="chart-wrap h190">
+          <canvas id="powerChart" role="img" aria-label="Donut chart showing current power draw vs headroom">Live power draw.</canvas>
+        </div>
+      </div>
+
+      <!-- CO2 Donut -->
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-cloud-storm"></i> CO₂ emissions</div>
+          <span class="badge badge-red">kg</span>
+        </div>
+        <div class="legend-row-h">
+          <div class="legend-item"><span class="legend-sq" style="background:#dc2626"></span>Emitted (kg)</div>
+          <div class="legend-item"><span class="legend-sq" style="background:#e5e7eb"></span>To 1 kg limit</div>
+        </div>
+        <div class="chart-wrap h190">
+          <canvas id="carbonChart" role="img" aria-label="Donut chart showing CO₂ emitted vs limit">CO₂ emission level.</canvas>
+        </div>
+      </div>
+
     </div>
-  </div>
 
-  <div id="status">Fetching data...</div>
+    <!-- Bottom Row -->
+    <div class="bottom-row">
 
-  <div class="info">
-    <p class="stat">Uptime: <span id="uptime">--</span></p>
-    <p class="stat">Energy Usage: <span id="energy">--</span> kWh</p>
-    <p class="stat">CO₂ Emissions: <span id="co2">--</span> kg</p>
-  </div>
+      <!-- Source breakdown (static illustrative) -->
+      <div class="small-card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-chart-donut"></i> Emission sources</div>
+        </div>
+        <div class="chart-wrap h160">
+          <canvas id="sourceChart" role="img" aria-label="Donut chart of emission sources">Sources breakdown.</canvas>
+        </div>
+        <div class="donut-legend">
+          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#2563eb"></span>HVAC</span><span class="dl-val">42%</span></div>
+          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#16a34a"></span>Lighting</span><span class="dl-val">21%</span></div>
+          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#ea580c"></span>Compute</span><span class="dl-val">27%</span></div>
+          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#9ca3af"></span>Other</span><span class="dl-val">10%</span></div>
+        </div>
+      </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+      <!-- Weekly heatmap (static illustrative) -->
+      <div class="small-card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-calendar-week"></i> Weekly CO₂ heatmap</div>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">Each row = 2h block · darker = higher</div>
+        <div class="hm-days">
+          <div class="hm-day">Mon</div><div class="hm-day">Tue</div>
+          <div class="hm-day">Wed</div><div class="hm-day">Thu</div>
+          <div class="hm-day">Fri</div><div class="hm-day">Sat</div>
+          <div class="hm-day">Sun</div>
+        </div>
+        <div class="heatmap" id="heatmap"></div>
+        <div class="hm-legend">
+          <span class="hm-lbl">Low</span>
+          <div class="hm-swatch" style="background:#dcfce7"></div>
+          <div class="hm-swatch" style="background:#86efac"></div>
+          <div class="hm-swatch" style="background:#22c55e"></div>
+          <div class="hm-swatch" style="background:#15803d"></div>
+          <div class="hm-swatch" style="background:#14532d"></div>
+          <span class="hm-lbl">High</span>
+        </div>
+      </div>
 
-  <script src="index.js"></script>
-  <script src="renderer.js"></script>
+      <!-- Insights -->
+      <div class="small-card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-sparkles"></i> Smart insights</div>
+        </div>
+        <div class="insight-row">
+          <i class="ti ti-trending-down insight-icon" style="color:#16a34a"></i>
+          <div class="insight-txt"><strong>Peak avoided</strong> — shifted 3 loads to off-peak, saving 4.2 kg CO₂</div>
+        </div>
+        <div class="insight-row">
+          <i class="ti ti-alert-triangle insight-icon" style="color:#d97706"></i>
+          <div class="insight-txt"><strong>HVAC spike</strong> — emissions 18% above baseline since 2 PM</div>
+        </div>
+        <div class="insight-row">
+          <i class="ti ti-rosette-discount-check insight-icon" style="color:#2563eb"></i>
+          <div class="insight-txt">
+            <strong>Monthly target</strong> — on track to hit 420 kg goal
+            <div class="progress-bar"><div class="progress-fill" style="width:67%;background:#2563eb"></div></div>
+          </div>
+        </div>
+        <div class="insight-row">
+          <i class="ti ti-bulb insight-icon" style="color:#d97706"></i>
+          <div class="insight-txt"><strong>Tip</strong> — enable night mode cooling to cut 2.8 kg/day</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /main -->
 
   <script>
-    // --- Typing Animation ---
-    const titleElement = document.getElementById('typewriter');
-    const text1 = "Wattaware Carbon Emissions Dashboard";
-    const text2 = "💡 Did you know? The average household emits 2.7 tons of CO₂ per year!";
-
-    let index = 0;
-    let deleting = false;
-    let currentText = text1;
-
-    function typeEffect() {
-      titleElement.textContent = currentText.slice(0, index);
-
-      if (!deleting && index < currentText.length) {
-        index++;
-        setTimeout(typeEffect, 80);
-      } else if (!deleting && index === currentText.length) {
-        setTimeout(() => {
-          deleting = true;
-          setTimeout(typeEffect, 40);
-        }, 2000);
-      } else if (deleting && index > 0) {
-        index--;
-        setTimeout(typeEffect, 40);
-      } else if (deleting && index === 0) {
-        deleting = false;
-        currentText = currentText === text1 ? text2 : text1;
-        setTimeout(typeEffect, 200);
-      }
+    // ── ipcRenderer (Electron) ──
+    if (typeof ipcRenderer === 'undefined') {
+      var { ipcRenderer } = require('electron');
     }
+    const { machineIdSync } = require('node-machine-id');
 
-    window.onload = () => {
-      titleElement.style.width = "auto";
-      typeEffect();
+    // ── Firebase ──
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVNHHHN4UtYA8uQaL1n4oCWcI9_6E1gJ8",
+      authDomain: "wattaware-718b3.firebaseapp.com",
+      projectId: "wattaware-718b3",
+      storageBucket: "wattaware-718b3.appspot.com",
+      messagingSenderId: "46958510191",
+      appId: "1:46958510191:web:9b259ae97ee67083d5cd9a",
+      measurementId: "G-XNLFX18H7L"
     };
+    const fbApp = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const deviceId = machineIdSync();
 
-    // Dummy logout function (replace with Firebase auth later)
-    function logout() {
-      alert("Logged out successfully!");
+    // ── Session state (persisted via localStorage, same as original) ──
+    const CO2_PER_KWH = 0.82;
+    let total_energy_kwh = parseFloat(localStorage.getItem('energy_kwh')) || 0;
+    let total_co2        = parseFloat(localStorage.getItem('co2_emissions')) || 0;
+    let lastPayload = {};
 
+    // ── Session timer — persisted so page reloads don't reset it ──
+    if (!localStorage.getItem('session_start')) {
+      localStorage.setItem('session_start', Date.now().toString());
     }
-      const { remote } = require("electron");
-      const currentWindow = remote.getCurrentWindow();
+    const sessionStart = parseInt(localStorage.getItem('session_start'), 10);
 
-      document.getElementById("close-btn").addEventListener("click", () => currentWindow.close());
-      document.getElementById("min-btn").addEventListener("click", () => currentWindow.minimize());
-      document.getElementById("max-btn").addEventListener("click", () => {
+    setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+      const hh = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+      const mm = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+      document.getElementById('m-uptime').textContent = `${hh}:${mm}`;
+    }, 1000);
+
+    // ── Charts ──
+    const powerChart = new Chart(document.getElementById('powerChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Current Power (W)', 'Headroom'],
+        datasets: [{
+          data: [0, 100],
+          backgroundColor: ['#2563eb', '#e5e7eb'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        cutout: '70%',
+        responsive: true, maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11} }
+        }
+      }
+    });
+
+    const CO2_LIMIT = 1.0; // kg — daily session limit
+    const carbonChart = new Chart(document.getElementById('carbonChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['CO₂ Emitted (kg)', 'Remaining to 1 kg limit'],
+        datasets: [{
+          data: [0, CO2_LIMIT],
+          backgroundColor: ['#dc2626', '#e5e7eb'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        cutout: '70%',
+        responsive: true, maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11} }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('sourceChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['HVAC','Lighting','Compute','Other'],
+        datasets: [{
+          data: [42,21,27,10],
+          backgroundColor: ['#2563eb','#16a34a','#ea580c','#9ca3af'],
+          borderWidth: 0, hoverOffset: 4
+        }]
+      },
+      options: {
+        cutout: '65%',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11} }
+        }
+      }
+    });
+
+    // ── Heatmap (illustrative) ──
+    const heatVals = [
+      [1,2,3,4,5,3,2],[2,3,4,5,4,2,1],[3,4,5,5,4,3,2],[2,3,4,4,3,2,1],
+      [1,2,3,3,2,1,1],[1,1,2,2,2,1,1],[0,1,1,2,1,0,0],[0,0,1,1,1,0,0],
+      [1,1,2,3,2,1,0],[2,3,4,5,4,2,1],[3,4,5,5,5,3,2],[2,3,4,4,3,2,1],
+    ];
+    const hmColors = ['#f0fdf4','#dcfce7','#86efac','#22c55e','#15803d','#14532d'];
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const hmEl = document.getElementById('heatmap');
+    heatVals.forEach((row, r) => {
+      row.forEach((val, c) => {
+        const cell = document.createElement('div');
+        cell.className = 'hm-cell';
+        cell.style.background = hmColors[val];
+        cell.title = `${days[c]} ${r*2}:00 — ${(val/5*3).toFixed(1)} kg`;
+        hmEl.appendChild(cell);
       });
+    });
+
+    // ── ipcRenderer: live power-data from Python via main.js ──
+    ipcRenderer.on('power-data', (event, data) => {
+      console.log("📡 Received power-data:", data);
+
+      const power      = data.power_watts || 0;
+      const energy_kwh = (power / 3600) / 1000;   // same calc as original renderer.js
+      total_energy_kwh += energy_kwh;
+      total_co2         = total_energy_kwh * CO2_PER_KWH;
+
+      localStorage.setItem('energy_kwh',    total_energy_kwh.toFixed(6));
+      localStorage.setItem('co2_emissions', total_co2.toFixed(6));
+
+      // Metric cards
+      document.getElementById('m-power').textContent  = power.toFixed(1);
+      document.getElementById('m-energy').textContent = total_energy_kwh.toFixed(4);
+      document.getElementById('m-co2').textContent    = total_co2.toFixed(4);
+      document.getElementById('method-badge').textContent = data.method || 'Unknown';
+
+      // Status bar
+      const dot = document.getElementById('status-dot');
+      dot.classList.add('live');
+      document.getElementById('status-txt').textContent =
+        `Live · ${power.toFixed(1)} W · method: ${data.method || '—'}`;
+
+      // Charts
+      powerChart.data.datasets[0].data  = [power,     Math.max(0, 100 - power)];
+      carbonChart.data.datasets[0].data = [total_co2, Math.max(0, CO2_LIMIT - total_co2)];
+      powerChart.update();
+      carbonChart.update();
+
+      // Stash for Firebase sync
+      lastPayload = {
+        timestamp:    new Date().toISOString(),
+        power_watts:  power,
+        energy_kwh:   total_energy_kwh,
+        co2_emissions: total_co2,
+        method:       data.method || 'Unknown'
+      };
+    });
+
+    // ── Firebase sync every 3 s (same as original) ──
+    setInterval(async () => {
+      if (!lastPayload || !lastPayload.timestamp) return;
+      try {
+        const docRef = db.collection('laptop_power_logs').doc(deviceId);
+        await docRef.set(lastPayload, { merge: true });
+        console.log("✅ Firebase synced", lastPayload);
+        const badge = document.getElementById('sync-badge');
+        badge.style.display = '';
+        badge.textContent = 'Firebase OK';
+        badge.className = 'sync-badge sync-ok';
+      } catch (e) {
+        console.error("❌ Firebase error:", e);
+        const badge = document.getElementById('sync-badge');
+        badge.style.display = '';
+        badge.textContent = 'Firebase error';
+        badge.className = 'sync-badge sync-err';
+      }
+    }, 3000);
+
+    // ── Window controls via ipcMain ──
+    document.getElementById('close-btn').addEventListener('click',
+      () => ipcRenderer.send('window-control', 'close'));
+    document.getElementById('min-btn').addEventListener('click',
+      () => ipcRenderer.send('window-control', 'minimize'));
+    document.getElementById('max-btn').addEventListener('click',
+      () => ipcRenderer.send('window-control', 'maximize'));
+
+    // ── Logout — clear session timer so next login starts fresh ──
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('session_start');
+      ipcRenderer.send('logout');
+    });
   </script>
 </body>
 </html>
