@@ -2,48 +2,63 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 
-
 let mainWindow;
 let pythonProcess;
-let lastPowerData = null; // Store last JSON to resend after load
+let lastPowerData = null;
 
 // Resolve path to the Python script depending on packaged state
 const pythonScriptPath = app.isPackaged
 	? path.join(process.resourcesPath, 'adaptive_power_tracker.py')
 	: path.join(__dirname, 'adaptive_power_tracker.py');
 
-// Choose a Python executable on Windows that works even without PATH python
+// Cross-platform Python launcher
 function getPythonCommand() {
 	if (process.platform === 'win32') {
 		return { cmd: 'py', argsPrefix: ['-3'] };
 	}
-	return { cmd: 'python', argsPrefix: [] };
+
+	if (process.platform === 'darwin') {
+		return { cmd: '/usr/bin/python3', argsPrefix: [] };
+	}
+
+	return { cmd: 'python3', argsPrefix: [] };
 }
 
 app.whenReady().then(() => {
-	// Start Python script for power tracking
 	const python = getPythonCommand();
-	pythonProcess = spawn(python.cmd, [...python.argsPrefix, pythonScriptPath], {
-		stdio: ['ignore', 'pipe', 'pipe'],
-		windowsHide: true,
-		shell: false
-	});
 
-	// Handle incoming JSON data from Python
+	console.log('Using Python:', python.cmd);
+	console.log('Python Script:', pythonScriptPath);
+
+	// Start Python script
+	pythonProcess = spawn(
+		python.cmd,
+		[...python.argsPrefix, pythonScriptPath],
+		{
+			stdio: ['ignore', 'pipe', 'pipe'],
+			windowsHide: true,
+			shell: false
+		}
+	);
+
 	pythonProcess.stdout.on('data', (chunk) => {
 		const lines = chunk.toString().split('\n');
+
 		lines.forEach((line) => {
-			if (line.trim()) {
-				console.log('[Python output]', line);
-				try {
-					const jsonData = JSON.parse(line);
-					lastPowerData = jsonData;
-					if (mainWindow && mainWindow.webContents) {
-						mainWindow.webContents.send('power-data', jsonData);
-					}
-				} catch (e) {
-					console.error('Invalid JSON from Python:', line);
+			if (!line.trim()) return;
+
+			console.log('[Python output]', line);
+
+			try {
+				const jsonData = JSON.parse(line);
+
+				lastPowerData = jsonData;
+
+				if (mainWindow && mainWindow.webContents) {
+					mainWindow.webContents.send('power-data', jsonData);
 				}
+			} catch (e) {
+				console.error('Invalid JSON from Python:', line);
 			}
 		});
 	});
@@ -52,29 +67,35 @@ app.whenReady().then(() => {
 		console.error('Python stderr:', err.toString());
 	});
 
-	pythonProcess.on('close', () => {
+	pythonProcess.on('error', (err) => {
+		console.error('Failed to start Python process:', err);
+	});
+
+	pythonProcess.on('close', (code) => {
+		console.log(`Python process exited with code ${code}`);
 		pythonProcess = null;
 	});
 
-	// Launch login window
+	// Main window
 	mainWindow = new BrowserWindow({
 		width: 1000,
 		height: 800,
+		autoHideMenuBar: true,
+		titleBarStyle: 'hidden',
 		webPreferences: {
 			nodeIntegration: true,
-			contextIsolation: false,
-		},
-		 autoHideMenuBar: true,
-		 titleBarStyle: 'hidden', // 👈 Hides the menu bar automatically
-
+			contextIsolation: false
+		}
 	});
 
 	mainWindow.loadFile('login.html');
 
 	ipcMain.on('login-success', () => {
 		mainWindow.loadFile('index.html');
+
 		mainWindow.webContents.once('did-finish-load', () => {
 			console.log('✅ index.html fully loaded');
+
 			if (lastPowerData) {
 				mainWindow.webContents.send('power-data', lastPowerData);
 			}
@@ -83,9 +104,34 @@ app.whenReady().then(() => {
 
 	ipcMain.on('logout', () => {
 		mainWindow.loadFile('login.html');
+
 		if (pythonProcess) {
 			pythonProcess.kill();
 			pythonProcess = null;
+		}
+	});
+
+	ipcMain.on('window-control', (event, action) => {
+		const window = BrowserWindow.getFocusedWindow();
+
+		if (!window) return;
+
+		switch (action) {
+			case 'minimize':
+				window.minimize();
+				break;
+
+			case 'maximize':
+				if (window.isMaximized()) {
+					window.unmaximize();
+				} else {
+					window.maximize();
+				}
+				break;
+
+			case 'close':
+				window.close();
+				break;
 		}
 	});
 
@@ -95,22 +141,4 @@ app.whenReady().then(() => {
 			pythonProcess = null;
 		}
 	});
-	ipcMain.on("window-control", (event, action) => {
-  const window = BrowserWindow.getFocusedWindow();
-  if (!window) return;
-
-  switch (action) {
-    case "minimize":
-      window.minimize();
-      break;
-    case "maximize":
-      if (window.isMaximized()) window.unmaximize();
-      else window.maximize();
-      break;
-    case "close":
-      window.close();
-      break;
-  }
-});
-
 });
