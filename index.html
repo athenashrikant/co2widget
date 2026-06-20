@@ -7,62 +7,34 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-
-  <!-- Firebase compat SDKs (CDN, same as your original) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      color: #1c1c1e;
-      min-height: 100vh;
+      background: #f0f2f5; color: #1c1c1e; min-height: 100vh;
     }
-
-    /* ── Titlebar ── */
     .titlebar {
-      -webkit-app-region: drag;
-      height: 44px;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
+      -webkit-app-region: drag; height: 44px; background: #fff;
+      border-bottom: 1px solid #e5e7eb; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 16px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     }
     .window-controls { display: flex; gap: 8px; -webkit-app-region: no-drag; align-items: center; }
     .dot { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; -webkit-app-region: no-drag; }
     .dot:hover { opacity: 0.75; }
-    .dot-r { background: #ff5f57; }
-    .dot-y { background: #febc2e; }
-    .dot-g { background: #28c840; }
+    .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
     .app-name { font-size: 13px; font-weight: 500; color: #555; display: flex; align-items: center; gap: 6px; }
     .logout-btn {
-      -webkit-app-region: no-drag;
-      font-size: 12px; padding: 6px 14px;
-      background: transparent; border: 1px solid #d1d5db;
-      border-radius: 8px; cursor: pointer; color: #555;
-      font-family: inherit; display: flex; align-items: center; gap: 5px;
-      transition: all 0.2s;
+      -webkit-app-region: no-drag; font-size: 12px; padding: 6px 14px;
+      background: transparent; border: 1px solid #d1d5db; border-radius: 8px;
+      cursor: pointer; color: #555; font-family: inherit;
+      display: flex; align-items: center; gap: 5px; transition: all 0.2s;
     }
     .logout-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
-
-    /* ── Main Layout ── */
-    .main {
-      margin-top: 44px;
-      padding: 20px 24px 24px;
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    /* ── Hero ── */
+    .main { margin-top: 44px; padding: 20px 24px 24px; max-width: 1200px; margin-left: auto; margin-right: auto; }
     .hero { text-align: center; margin-bottom: 18px; padding-top: 6px; }
     .hero h1 { font-size: 20px; font-weight: 600; color: #111; margin-bottom: 4px; }
     .hero p  { font-size: 12px; color: #6b7280; }
@@ -71,25 +43,21 @@
     .status-dot.live { background: #28c840; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
     .status-txt { font-size: 12px; color: #6b7280; }
-
-    /* ── Metric Cards ── */
+    .sync-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+    .sync-ok  { background: #f0fdf4; color: #16a34a; }
+    .sync-err { background: #fef2f2; color: #dc2626; }
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
-    .metric-card {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 14px; padding: 16px;
-    }
+    .metric-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; }
     .metric-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .metric-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .mi-blue   { background: #eff6ff; color: #2563eb; }
-    .mi-red    { background: #fef2f2; color: #dc2626; }
-    .mi-green  { background: #f0fdf4; color: #16a34a; }
-    .mi-amber  { background: #fffbeb; color: #d97706; }
+    .mi-blue  { background: #eff6ff; color: #2563eb; }
+    .mi-red   { background: #fef2f2; color: #dc2626; }
+    .mi-green { background: #f0fdf4; color: #16a34a; }
+    .mi-amber { background: #fffbeb; color: #d97706; }
     .method-badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; background: #f3f4f6; color: #6b7280; }
     .metric-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
     .metric-val   { font-size: 26px; font-weight: 600; color: #111; line-height: 1; }
     .metric-unit  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-
-    /* ── Chart Cards ── */
     .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
     .chart-card  { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; }
     .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -97,25 +65,19 @@
     .badge       { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
     .badge-blue  { background: #eff6ff; color: #2563eb; }
     .badge-red   { background: #fef2f2; color: #dc2626; }
+    .badge-amber { background: #fffbeb; color: #d97706; }
+    .badge-purple{ background: #f5f3ff; color: #7c3aed; }
     .chart-wrap  { position: relative; width: 100%; }
-    .h190 { height: 190px; }
-    .h160 { height: 160px; }
-
+    .h190 { height: 190px; } .h160 { height: 160px; }
     .legend-row-h { display: flex; gap: 14px; margin-bottom: 8px; }
     .legend-item  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; }
     .legend-sq    { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-
-    /* ── Bottom Row ── */
     .bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
     .small-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; }
-
-    /* Donut legend */
     .donut-legend { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
     .dl-row   { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
     .dl-label { display: flex; align-items: center; gap: 6px; color: #6b7280; }
     .dl-val   { font-weight: 500; color: #111; }
-
-    /* Heatmap */
     .hm-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 4px; }
     .hm-day  { font-size: 10px; color: #9ca3af; text-align: center; }
     .heatmap { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
@@ -123,8 +85,6 @@
     .hm-legend { display: flex; align-items: center; gap: 5px; margin-top: 10px; }
     .hm-lbl    { font-size: 10px; color: #9ca3af; }
     .hm-swatch { width: 14px; height: 8px; border-radius: 2px; }
-
-    /* Insights */
     .insight-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f3f4f6; }
     .insight-row:last-child { border-bottom: none; padding-bottom: 0; }
     .insight-icon { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
@@ -132,35 +92,22 @@
     .insight-txt strong { color: #111; font-weight: 500; }
     .progress-bar  { height: 4px; background: #f3f4f6; border-radius: 2px; margin-top: 5px; }
     .progress-fill { height: 100%; border-radius: 2px; }
-
-    /* Firebase sync indicator */
-    .sync-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
-    .sync-ok  { background: #f0fdf4; color: #16a34a; }
-    .sync-err { background: #fef2f2; color: #dc2626; }
+    .loading-txt { font-size: 11px; color: #9ca3af; text-align: center; padding: 20px 0; }
   </style>
 </head>
-
 <body>
 
-  <!-- Titlebar -->
   <div class="titlebar">
     <div class="window-controls">
-      <div class="dot dot-r" id="close-btn" title="Close"></div>
-      <div class="dot dot-y" id="min-btn" title="Minimize"></div>
-      <div class="dot dot-g" id="max-btn" title="Maximize"></div>
+      <div class="dot dot-r" id="close-btn"></div>
+      <div class="dot dot-y" id="min-btn"></div>
+      <div class="dot dot-g" id="max-btn"></div>
     </div>
-    <div class="app-name">
-      <i class="ti ti-bolt"></i> Wattaware Dashboard
-    </div>
-    <button class="logout-btn" id="logout-btn">
-      <i class="ti ti-logout"></i> Logout
-    </button>
+    <div class="app-name"><i class="ti ti-bolt"></i> Wattaware Dashboard</div>
+    <button class="logout-btn" id="logout-btn"><i class="ti ti-logout"></i> Logout</button>
   </div>
 
-  <!-- Main -->
   <div class="main">
-
-    <!-- Hero -->
     <div class="hero">
       <h1>Carbon Emissions Monitor</h1>
       <p>Real-time energy &amp; CO₂ tracking via system power sensor</p>
@@ -171,7 +118,6 @@
       </div>
     </div>
 
-    <!-- Metric Cards -->
     <div class="metrics">
       <div class="metric-card">
         <div class="metric-top">
@@ -183,35 +129,26 @@
         <div class="metric-unit">Watts</div>
       </div>
       <div class="metric-card">
-        <div class="metric-top">
-          <div class="metric-icon mi-red"><i class="ti ti-cloud"></i></div>
-        </div>
+        <div class="metric-top"><div class="metric-icon mi-red"><i class="ti ti-cloud"></i></div></div>
         <div class="metric-label">CO₂ Emitted</div>
         <div class="metric-val"><span id="m-co2">—</span></div>
         <div class="metric-unit">kg (session)</div>
       </div>
       <div class="metric-card">
-        <div class="metric-top">
-          <div class="metric-icon mi-green"><i class="ti ti-plug"></i></div>
-        </div>
+        <div class="metric-top"><div class="metric-icon mi-green"><i class="ti ti-plug"></i></div></div>
         <div class="metric-label">Energy Used</div>
         <div class="metric-val"><span id="m-energy">—</span></div>
         <div class="metric-unit">kWh (session)</div>
       </div>
       <div class="metric-card">
-        <div class="metric-top">
-          <div class="metric-icon mi-amber"><i class="ti ti-clock"></i></div>
-        </div>
+        <div class="metric-top"><div class="metric-icon mi-amber"><i class="ti ti-clock"></i></div></div>
         <div class="metric-label">Session</div>
         <div class="metric-val"><span id="m-uptime">00:00</span></div>
         <div class="metric-unit">hh:mm</div>
       </div>
     </div>
 
-    <!-- Charts Row -->
     <div class="charts-grid">
-
-      <!-- Power Donut -->
       <div class="chart-card">
         <div class="card-header">
           <div class="card-title"><i class="ti ti-activity"></i> Live power output</div>
@@ -222,11 +159,9 @@
           <div class="legend-item"><span class="legend-sq" style="background:#e5e7eb"></span>Headroom</div>
         </div>
         <div class="chart-wrap h190">
-          <canvas id="powerChart" role="img" aria-label="Donut chart showing current power draw vs headroom">Live power draw.</canvas>
+          <canvas id="powerChart"></canvas>
         </div>
       </div>
-
-      <!-- CO2 Donut -->
       <div class="chart-card">
         <div class="card-header">
           <div class="card-title"><i class="ti ti-cloud-storm"></i> CO₂ emissions</div>
@@ -237,44 +172,51 @@
           <div class="legend-item"><span class="legend-sq" style="background:#e5e7eb"></span>To 1 kg limit</div>
         </div>
         <div class="chart-wrap h190">
-          <canvas id="carbonChart" role="img" aria-label="Donut chart showing CO₂ emitted vs limit">CO₂ emission level.</canvas>
+          <canvas id="carbonChart"></canvas>
         </div>
       </div>
-
     </div>
 
-    <!-- Bottom Row -->
     <div class="bottom-row">
 
-      <!-- Source breakdown (static illustrative) -->
+      <!-- Time-of-day CO2 (real) -->
       <div class="small-card">
         <div class="card-header">
-          <div class="card-title"><i class="ti ti-chart-donut"></i> Emission sources</div>
+          <div class="card-title"><i class="ti ti-clock-hour-4"></i> CO₂ by time of day</div>
+          <span class="badge badge-amber" id="tod-now-badge">—</span>
         </div>
         <div class="chart-wrap h160">
-          <canvas id="sourceChart" role="img" aria-label="Donut chart of emission sources">Sources breakdown.</canvas>
+          <canvas id="sourceChart"></canvas>
         </div>
         <div class="donut-legend">
-          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#2563eb"></span>HVAC</span><span class="dl-val">42%</span></div>
-          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#16a34a"></span>Lighting</span><span class="dl-val">21%</span></div>
-          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#ea580c"></span>Compute</span><span class="dl-val">27%</span></div>
-          <div class="dl-row"><span class="dl-label"><span class="legend-sq" style="background:#9ca3af"></span>Other</span><span class="dl-val">10%</span></div>
+          <div class="dl-row">
+            <span class="dl-label"><span class="legend-sq" style="background:#f59e0b"></span>Morning 6am–12pm</span>
+            <span class="dl-val" id="tod-morning">—</span>
+          </div>
+          <div class="dl-row">
+            <span class="dl-label"><span class="legend-sq" style="background:#2563eb"></span>Afternoon 12pm–6pm</span>
+            <span class="dl-val" id="tod-afternoon">—</span>
+          </div>
+          <div class="dl-row">
+            <span class="dl-label"><span class="legend-sq" style="background:#7c3aed"></span>Night 6pm–6am</span>
+            <span class="dl-val" id="tod-night">—</span>
+          </div>
         </div>
       </div>
 
-      <!-- Weekly heatmap (static illustrative) -->
+      <!-- Heatmap (real) -->
       <div class="small-card">
         <div class="card-header">
-          <div class="card-title"><i class="ti ti-calendar-week"></i> Weekly CO₂ heatmap</div>
+          <div class="card-title"><i class="ti ti-calendar-week"></i> 7-day CO₂ heatmap</div>
         </div>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">Each row = 2h block · darker = higher</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">Daily CO₂ · from Firestore history</div>
         <div class="hm-days">
-          <div class="hm-day">Mon</div><div class="hm-day">Tue</div>
-          <div class="hm-day">Wed</div><div class="hm-day">Thu</div>
-          <div class="hm-day">Fri</div><div class="hm-day">Sat</div>
-          <div class="hm-day">Sun</div>
+          <div class="hm-day" id="hd0"></div><div class="hm-day" id="hd1"></div>
+          <div class="hm-day" id="hd2"></div><div class="hm-day" id="hd3"></div>
+          <div class="hm-day" id="hd4"></div><div class="hm-day" id="hd5"></div>
+          <div class="hm-day" id="hd6"></div>
         </div>
-        <div class="heatmap" id="heatmap"></div>
+        <div class="heatmap" id="heatmap"><div class="loading-txt" style="grid-column:1/-1">Loading...</div></div>
         <div class="hm-legend">
           <span class="hm-lbl">Low</span>
           <div class="hm-swatch" style="background:#dcfce7"></div>
@@ -286,43 +228,26 @@
         </div>
       </div>
 
-      <!-- Insights -->
+      <!-- Smart insights (real) -->
       <div class="small-card">
         <div class="card-header">
           <div class="card-title"><i class="ti ti-sparkles"></i> Smart insights</div>
         </div>
-        <div class="insight-row">
-          <i class="ti ti-trending-down insight-icon" style="color:#16a34a"></i>
-          <div class="insight-txt"><strong>Peak avoided</strong> — shifted 3 loads to off-peak, saving 4.2 kg CO₂</div>
-        </div>
-        <div class="insight-row">
-          <i class="ti ti-alert-triangle insight-icon" style="color:#d97706"></i>
-          <div class="insight-txt"><strong>HVAC spike</strong> — emissions 18% above baseline since 2 PM</div>
-        </div>
-        <div class="insight-row">
-          <i class="ti ti-rosette-discount-check insight-icon" style="color:#2563eb"></i>
-          <div class="insight-txt">
-            <strong>Monthly target</strong> — on track to hit 420 kg goal
-            <div class="progress-bar"><div class="progress-fill" style="width:67%;background:#2563eb"></div></div>
-          </div>
-        </div>
-        <div class="insight-row">
-          <i class="ti ti-bulb insight-icon" style="color:#d97706"></i>
-          <div class="insight-txt"><strong>Tip</strong> — enable night mode cooling to cut 2.8 kg/day</div>
+        <div id="insights-container">
+          <div class="loading-txt">Analysing your data...</div>
         </div>
       </div>
 
     </div>
-  </div><!-- /main -->
+  </div>
 
   <script>
-    // ── ipcRenderer (Electron) ──
+    // ── Electron + Firebase bootstrap ──
     if (typeof ipcRenderer === 'undefined') {
       var { ipcRenderer } = require('electron');
     }
     const { machineIdSync } = require('node-machine-id');
 
-    // ── Firebase ──
     const firebaseConfig = {
       apiKey: "AIzaSyDVNHHHN4UtYA8uQaL1n4oCWcI9_6E1gJ8",
       authDomain: "wattaware-718b3.firebaseapp.com",
@@ -332,22 +257,25 @@
       appId: "1:46958510191:web:9b259ae97ee67083d5cd9a",
       measurementId: "G-XNLFX18H7L"
     };
-    const fbApp = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const fbApp   = firebase.initializeApp(firebaseConfig);
+    const db      = firebase.firestore();
     const deviceId = machineIdSync();
 
-    // ── Session state (persisted via localStorage, same as original) ──
+    // ── Session state ──
     const CO2_PER_KWH = 0.82;
-    let total_energy_kwh = parseFloat(localStorage.getItem('energy_kwh')) || 0;
+    const CO2_LIMIT   = 1.0; // kg daily limit
+    let total_energy_kwh = parseFloat(localStorage.getItem('energy_kwh'))    || 0;
     let total_co2        = parseFloat(localStorage.getItem('co2_emissions')) || 0;
-    let lastPayload = {};
+    let lastPayload      = {};
 
-    // ── Session timer — persisted so page reloads don't reset it ──
+    // per-slot accumulators for time-of-day (reset each page load, real accumulation from live data)
+    const todSlots = { morning: 0, afternoon: 0, night: 0 };
+
+    // ── Session timer ──
     if (!localStorage.getItem('session_start')) {
       localStorage.setItem('session_start', Date.now().toString());
     }
     const sessionStart = parseInt(localStorage.getItem('session_start'), 10);
-
     setInterval(() => {
       const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
       const hh = String(Math.floor(elapsed / 3600)).padStart(2, '0');
@@ -355,97 +283,66 @@
       document.getElementById('m-uptime').textContent = `${hh}:${mm}`;
     }, 1000);
 
-    // ── Charts ──
+    // ── Helper: which slot is this hour? ──
+    function todSlot(isoString) {
+      const h = new Date(isoString).getHours();
+      if (h >= 6  && h < 12) return 'morning';
+      if (h >= 12 && h < 18) return 'afternoon';
+      return 'night';
+    }
+    function todLabel(slot) {
+      return { morning: '🌅 Morning', afternoon: '☀️ Afternoon', night: '🌙 Night' }[slot];
+    }
+    function todBadgeClass(slot) {
+      return { morning: 'badge-amber', afternoon: 'badge-blue', night: 'badge-purple' }[slot];
+    }
+
+    // ── Main charts ──
     const powerChart = new Chart(document.getElementById('powerChart'), {
       type: 'doughnut',
-      data: {
-        labels: ['Current Power (W)', 'Headroom'],
-        datasets: [{
-          data: [0, 100],
-          backgroundColor: ['#2563eb', '#e5e7eb'],
-          borderWidth: 0,
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        cutout: '70%',
-        responsive: true, maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11} }
-        }
-      }
+      data: { labels: ['Current Power (W)', 'Headroom'],
+        datasets: [{ data: [0, 100], backgroundColor: ['#2563eb','#e5e7eb'], borderWidth: 0, hoverOffset: 4 }] },
+      options: { cutout:'70%', responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{backgroundColor:'rgba(0,0,0,0.75)',titleFont:{size:11},bodyFont:{size:11}} } }
     });
 
-    const CO2_LIMIT = 1.0; // kg — daily session limit
     const carbonChart = new Chart(document.getElementById('carbonChart'), {
       type: 'doughnut',
-      data: {
-        labels: ['CO₂ Emitted (kg)', 'Remaining to 1 kg limit'],
-        datasets: [{
-          data: [0, CO2_LIMIT],
-          backgroundColor: ['#dc2626', '#e5e7eb'],
-          borderWidth: 0,
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        cutout: '70%',
-        responsive: true, maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11} }
-        }
-      }
+      data: { labels: ['CO₂ Emitted (kg)', 'Remaining to 1 kg'],
+        datasets: [{ data: [0, CO2_LIMIT], backgroundColor: ['#dc2626','#e5e7eb'], borderWidth: 0, hoverOffset: 4 }] },
+      options: { cutout:'70%', responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{backgroundColor:'rgba(0,0,0,0.75)',titleFont:{size:11},bodyFont:{size:11}} } }
     });
 
-    new Chart(document.getElementById('sourceChart'), {
+    // ── Time-of-day chart (live-updated) ──
+    const sourceChart = new Chart(document.getElementById('sourceChart'), {
       type: 'doughnut',
-      data: {
-        labels: ['HVAC','Lighting','Compute','Other'],
-        datasets: [{
-          data: [42,21,27,10],
-          backgroundColor: ['#2563eb','#16a34a','#ea580c','#9ca3af'],
-          borderWidth: 0, hoverOffset: 4
-        }]
-      },
-      options: {
-        cutout: '65%',
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11} }
-        }
-      }
+      data: { labels: ['Morning','Afternoon','Night'],
+        datasets: [{ data: [0, 0, 0], backgroundColor: ['#f59e0b','#2563eb','#7c3aed'], borderWidth: 0, hoverOffset: 4 }] },
+      options: { cutout:'65%', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{backgroundColor:'rgba(0,0,0,0.75)',titleFont:{size:11},bodyFont:{size:11},
+          callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(4)} kg` } } } }
     });
 
-    // ── Heatmap (illustrative) ──
-    const heatVals = [
-      [1,2,3,4,5,3,2],[2,3,4,5,4,2,1],[3,4,5,5,4,3,2],[2,3,4,4,3,2,1],
-      [1,2,3,3,2,1,1],[1,1,2,2,2,1,1],[0,1,1,2,1,0,0],[0,0,1,1,1,0,0],
-      [1,1,2,3,2,1,0],[2,3,4,5,4,2,1],[3,4,5,5,5,3,2],[2,3,4,4,3,2,1],
-    ];
-    const hmColors = ['#f0fdf4','#dcfce7','#86efac','#22c55e','#15803d','#14532d'];
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const hmEl = document.getElementById('heatmap');
-    heatVals.forEach((row, r) => {
-      row.forEach((val, c) => {
-        const cell = document.createElement('div');
-        cell.className = 'hm-cell';
-        cell.style.background = hmColors[val];
-        cell.title = `${days[c]} ${r*2}:00 — ${(val/5*3).toFixed(1)} kg`;
-        hmEl.appendChild(cell);
-      });
-    });
+    function updateTodChart() {
+      const { morning, afternoon, night } = todSlots;
+      const total = morning + afternoon + night;
+      sourceChart.data.datasets[0].data = [morning, afternoon, night];
+      sourceChart.update();
+      document.getElementById('tod-morning').textContent   = total > 0 ? (morning/total*100).toFixed(0)+'%' : '—';
+      document.getElementById('tod-afternoon').textContent = total > 0 ? (afternoon/total*100).toFixed(0)+'%' : '—';
+      document.getElementById('tod-night').textContent     = total > 0 ? (night/total*100).toFixed(0)+'%' : '—';
+      // active period badge
+      const slot = todSlot(new Date().toISOString());
+      const badge = document.getElementById('tod-now-badge');
+      badge.textContent  = todLabel(slot);
+      badge.className    = 'badge ' + todBadgeClass(slot);
+    }
 
-    // ── ipcRenderer: live power-data from Python via main.js ──
+    // ── ipcRenderer: live data from Python ──
     ipcRenderer.on('power-data', (event, data) => {
-      console.log("📡 Received power-data:", data);
-
       const power      = data.power_watts || 0;
-      const energy_kwh = (power / 3600) / 1000;   // same calc as original renderer.js
+      const energy_kwh = (power / 3600) / 1000;
       total_energy_kwh += energy_kwh;
       total_co2         = total_energy_kwh * CO2_PER_KWH;
 
@@ -459,20 +356,22 @@
       document.getElementById('method-badge').textContent = data.method || 'Unknown';
 
       // Status bar
-      const dot = document.getElementById('status-dot');
-      dot.classList.add('live');
+      document.getElementById('status-dot').classList.add('live');
       document.getElementById('status-txt').textContent =
-        `Live · ${power.toFixed(1)} W · method: ${data.method || '—'}`;
+        `Live · ${power.toFixed(1)} W · ${data.method || '—'}`;
 
-      // Charts
-      powerChart.data.datasets[0].data  = [power,     Math.max(0, 100 - power)];
+      // Main donuts
+      powerChart.data.datasets[0].data  = [power, Math.max(0, 100 - power)];
       carbonChart.data.datasets[0].data = [total_co2, Math.max(0, CO2_LIMIT - total_co2)];
-      powerChart.update();
-      carbonChart.update();
+      powerChart.update(); carbonChart.update();
 
-      // Stash for Firebase sync
+      // Accumulate into time-of-day slot
+      const slot = todSlot(data.timestamp || new Date().toISOString());
+      todSlots[slot] += energy_kwh * CO2_PER_KWH;
+      updateTodChart();
+
       lastPayload = {
-        timestamp:    new Date().toISOString(),
+        timestamp:    data.timestamp || new Date().toISOString(),
         power_watts:  power,
         energy_kwh:   total_energy_kwh,
         co2_emissions: total_co2,
@@ -480,35 +379,222 @@
       };
     });
 
-    // ── Firebase sync every 3 s (same as original) ──
+    // ── Firebase: write current doc + append history row ──
     setInterval(async () => {
       if (!lastPayload || !lastPayload.timestamp) return;
       try {
         const docRef = db.collection('laptop_power_logs').doc(deviceId);
         await docRef.set(lastPayload, { merge: true });
-        console.log("✅ Firebase synced", lastPayload);
+
+        // Append to history subcollection for heatmap + insights
+        await docRef.collection('history').add(lastPayload);
+
         const badge = document.getElementById('sync-badge');
         badge.style.display = '';
-        badge.textContent = 'Firebase OK';
-        badge.className = 'sync-badge sync-ok';
+        badge.textContent   = 'Firebase OK';
+        badge.className     = 'sync-badge sync-ok';
       } catch (e) {
-        console.error("❌ Firebase error:", e);
+        console.error('Firebase error:', e);
         const badge = document.getElementById('sync-badge');
         badge.style.display = '';
-        badge.textContent = 'Firebase error';
-        badge.className = 'sync-badge sync-err';
+        badge.textContent   = 'Firebase error';
+        badge.className     = 'sync-badge sync-err';
       }
     }, 3000);
 
-    // ── Window controls via ipcMain ──
-    document.getElementById('close-btn').addEventListener('click',
-      () => ipcRenderer.send('window-control', 'close'));
-    document.getElementById('min-btn').addEventListener('click',
-      () => ipcRenderer.send('window-control', 'minimize'));
-    document.getElementById('max-btn').addEventListener('click',
-      () => ipcRenderer.send('window-control', 'maximize'));
+    // ── Heatmap: load last 7 days from Firestore history ──
+    async function loadHeatmap() {
+      const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const hmEl = document.getElementById('heatmap');
 
-    // ── Logout — clear session timer so next login starts fresh ──
+      // Build last-7-days date list (oldest → newest)
+      const today = new Date(); today.setHours(0,0,0,0);
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        days.push(d);
+      }
+
+      // Set day label headers
+      days.forEach((d, i) => {
+        document.getElementById(`hd${i}`).textContent = DAY_NAMES[d.getDay()];
+      });
+
+      // Query history from 7 days ago
+      const since = new Date(today); since.setDate(since.getDate() - 6);
+      let docs = [];
+      try {
+        const snap = await db.collection('laptop_power_logs').doc(deviceId)
+          .collection('history')
+          .where('timestamp', '>=', since.toISOString())
+          .get();
+        docs = snap.docs.map(d => d.data());
+      } catch(e) {
+        console.warn('Heatmap query failed:', e);
+      }
+
+      // Aggregate CO2 per day (YYYY-MM-DD key)
+      const co2ByDay = {};
+      days.forEach(d => { co2ByDay[d.toISOString().slice(0,10)] = 0; });
+      docs.forEach(doc => {
+        const key = doc.timestamp ? doc.timestamp.slice(0,10) : null;
+        if (key && co2ByDay[key] !== undefined) {
+          // each history doc is a snapshot; use energy delta approximation
+          const energyIncrement = (doc.power_watts || 0) / 3600 / 1000 * 3; // ~3s interval
+          co2ByDay[key] += energyIncrement * CO2_PER_KWH;
+        }
+      });
+
+      const vals  = days.map(d => co2ByDay[d.toISOString().slice(0,10)] || 0);
+      const maxVal = Math.max(...vals, 0.0001);
+
+      // 5-level green colour scale
+      const hmColors = ['#f0fdf4','#dcfce7','#86efac','#22c55e','#15803d','#14532d'];
+      function co2ToColor(v) {
+        const idx = Math.min(5, Math.floor((v / maxVal) * 5));
+        return hmColors[idx];
+      }
+
+      // Render: 1 row × 7 cols (one cell per day)
+      hmEl.innerHTML = '';
+      hmEl.style.gridTemplateColumns = 'repeat(7, 1fr)';
+      days.forEach((d, i) => {
+        const cell = document.createElement('div');
+        cell.className  = 'hm-cell';
+        cell.style.height  = '40px';
+        cell.style.background = co2ToColor(vals[i]);
+        cell.title = `${DAY_NAMES[d.getDay()]} ${d.toLocaleDateString()} — ${vals[i].toFixed(4)} kg CO₂`;
+        hmEl.appendChild(cell);
+      });
+    }
+
+    // ── Smart insights: real personalised from Firestore history ──
+    async function loadInsights() {
+      const container = document.getElementById('insights-container');
+      let docs = [];
+      try {
+        const since = new Date(); since.setDate(since.getDate() - 7);
+        const snap = await db.collection('laptop_power_logs').doc(deviceId)
+          .collection('history')
+          .where('timestamp', '>=', since.toISOString())
+          .get();
+        docs = snap.docs.map(d => d.data());
+      } catch(e) {
+        console.warn('Insights query failed:', e);
+      }
+
+      // If no history yet, show session-based insights
+      const sessionCo2  = total_co2;
+      const sessionEnergy = total_energy_kwh;
+      const sessionElapsed = (Date.now() - sessionStart) / 1000 / 3600; // hours
+
+      // Compute per-hour pace from current session
+      const paceCo2PerHour = sessionElapsed > 0 ? sessionCo2 / sessionElapsed : 0;
+      const projectedDailyCo2 = paceCo2PerHour * 24;
+
+      // Peak hour from history docs
+      const hourBuckets = Array(24).fill(0);
+      docs.forEach(doc => {
+        if (doc.timestamp) {
+          const h = new Date(doc.timestamp).getHours();
+          const inc = (doc.power_watts || 0) / 3600 / 1000 * 3 * CO2_PER_KWH;
+          hourBuckets[h] += inc;
+        }
+      });
+      const peakHour   = hourBuckets.indexOf(Math.max(...hourBuckets));
+      const peakLabel  = `${peakHour}:00–${peakHour+1}:00`;
+
+      // Best vs worst day from history
+      const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const dayBuckets = {};
+      docs.forEach(doc => {
+        if (!doc.timestamp) return;
+        const key = doc.timestamp.slice(0,10);
+        dayBuckets[key] = (dayBuckets[key]||0) + (doc.power_watts||0)/3600/1000*3*CO2_PER_KWH;
+      });
+      const dayEntries = Object.entries(dayBuckets);
+      let bestDay = null, worstDay = null;
+      if (dayEntries.length > 0) {
+        dayEntries.sort((a,b) => a[1]-b[1]);
+        bestDay  = { date: dayEntries[0][0],  co2: dayEntries[0][1] };
+        worstDay = { date: dayEntries[dayEntries.length-1][0], co2: dayEntries[dayEntries.length-1][1] };
+      }
+
+      // Current TOD active slot
+      const slot     = todSlot(new Date().toISOString());
+      const slotName = { morning:'morning', afternoon:'afternoon', night:'night' }[slot];
+
+      // Progress toward 1 kg limit
+      const pct = Math.min(100, (sessionCo2 / CO2_LIMIT) * 100);
+
+      // Build insight rows
+      const rows = [];
+
+      // 1. Pace vs limit
+      rows.push({
+        icon: projectedDailyCo2 > CO2_LIMIT
+          ? '<i class="ti ti-alert-triangle insight-icon" style="color:#dc2626"></i>'
+          : '<i class="ti ti-rosette-discount-check insight-icon" style="color:#16a34a"></i>',
+        html: projectedDailyCo2 > CO2_LIMIT
+          ? `<strong>Pace alert</strong> — at current rate you'll emit <strong>${projectedDailyCo2.toFixed(3)} kg</strong> today, exceeding your 1 kg limit
+             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:#dc2626"></div></div>`
+          : `<strong>On track</strong> — projected daily emissions are <strong>${projectedDailyCo2.toFixed(3)} kg</strong>, within your 1 kg limit
+             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:#16a34a"></div></div>`
+      });
+
+      // 2. Active period
+      rows.push({
+        icon: `<i class="ti ti-clock insight-icon" style="color:#7c3aed"></i>`,
+        html: `<strong>Active now</strong> — you're in the <strong>${slotName}</strong> window. ${
+          todSlots[slot] > 0
+            ? `${todSlots[slot].toFixed(4)} kg CO₂ emitted this ${slotName} so far.`
+            : 'No emissions recorded yet this window.'
+        }`
+      });
+
+      // 3. Peak hour (from history, or session)
+      if (docs.length > 0 && Math.max(...hourBuckets) > 0) {
+        rows.push({
+          icon: '<i class="ti ti-trending-up insight-icon" style="color:#d97706"></i>',
+          html: `<strong>Peak hour</strong> — your highest emissions over the last 7 days occur at <strong>${peakLabel}</strong>. Consider reducing load then.`
+        });
+      } else {
+        rows.push({
+          icon: '<i class="ti ti-trending-up insight-icon" style="color:#d97706"></i>',
+          html: `<strong>Peak hour</strong> — <strong>${paceCo2PerHour.toFixed(5)} kg/h</strong> average this session. Keep tracking to identify your peak window.`
+        });
+      }
+
+      // 4. Best/worst day or current session note
+      if (bestDay && worstDay && bestDay.date !== worstDay.date) {
+        const bestLabel  = new Date(bestDay.date).toLocaleDateString('en-IN',{weekday:'short',month:'short',day:'numeric'});
+        const worstLabel = new Date(worstDay.date).toLocaleDateString('en-IN',{weekday:'short',month:'short',day:'numeric'});
+        rows.push({
+          icon: '<i class="ti ti-star insight-icon" style="color:#2563eb"></i>',
+          html: `<strong>Best day</strong> ${bestLabel} — ${bestDay.co2.toFixed(4)} kg &nbsp;·&nbsp; <strong>Worst</strong> ${worstLabel} — ${worstDay.co2.toFixed(4)} kg`
+        });
+      } else {
+        rows.push({
+          icon: '<i class="ti ti-bulb insight-icon" style="color:#d97706"></i>',
+          html: `<strong>Tip</strong> — you've used <strong>${sessionEnergy.toFixed(4)} kWh</strong> this session. Each hour at this rate adds <strong>${(paceCo2PerHour*1000).toFixed(2)} g</strong> CO₂.`
+        });
+      }
+
+      container.innerHTML = rows.map(r =>
+        `<div class="insight-row">${r.icon}<div class="insight-txt">${r.html}</div></div>`
+      ).join('');
+    }
+
+    // Load heatmap + insights on boot, refresh every 30 s
+    loadHeatmap();
+    loadInsights();
+    setInterval(() => { loadHeatmap(); loadInsights(); }, 30000);
+
+    // Window controls
+    document.getElementById('close-btn').addEventListener('click',  () => ipcRenderer.send('window-control','close'));
+    document.getElementById('min-btn').addEventListener('click',    () => ipcRenderer.send('window-control','minimize'));
+    document.getElementById('max-btn').addEventListener('click',    () => ipcRenderer.send('window-control','maximize'));
+
     document.getElementById('logout-btn').addEventListener('click', () => {
       localStorage.removeItem('session_start');
       ipcRenderer.send('logout');
