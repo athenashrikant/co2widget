@@ -1,153 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sign Up</title>
-  <style>
-    :root {
-      --bg: #f3f4f6;
-      --fg: #111827;
-      --card-bg: #fff;
-      --input-bg: #fff;
-      --input-fg: #111827;
-      --link: #2563eb;
-      --button-bg: #10b981;
-      --button-fg: #fff;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign Up — WattAware</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --bg-accent: radial-gradient(circle at 85% 10%, rgba(16,185,129,0.08), transparent 45%);
+    --fg: #111827;
+    --fg-muted: #6b7280;
+    --card-bg: #ffffff;
+    --card-border: #e5e7eb;
+    --input-bg: #f9fafb;
+    --input-border: #d1d5db;
+    --input-fg: #111827;
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --link: #2563eb;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --co2: #2563eb;
+  }
+  body.dark {
+    --bg: #0b0f17;
+    --bg-accent: radial-gradient(circle at 85% 10%, rgba(16,185,129,0.12), transparent 45%);
+    --fg: #f3f4f6;
+    --fg-muted: #9ca3af;
+    --card-bg: #141a24;
+    --card-border: #232c3a;
+    --input-bg: #1b2330;
+    --input-border: #2c3848;
+    --input-fg: #f3f4f6;
+    --accent: #10b981;
+    --accent-hover: #34d399;
+    --link: #3b82f6;
+    --danger: #f87171;
+    --danger-bg: rgba(220,38,38,0.12);
+    --success: #34d399;
+    --success-bg: rgba(16,185,129,0.12);
+    --co2: #3b82f6;
+  }
 
-    body.dark {
-      --bg: #111827;
-      --fg: #f3f4f6;
-      --card-bg: #1f2937;
-      --input-bg: #374151;
-      --input-fg: #f3f4f6;
-      --link: #3b82f6;
-      --button-bg: #059669;
-    }
+  * { box-sizing: border-box; }
 
-    * {
-      box-sizing: border-box;
-    }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg-accent), var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
 
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
+  .toggle-theme {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    color: var(--fg);
+    border: 1px solid var(--card-border);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .toggle-theme:hover { border-color: var(--accent); color: var(--accent); }
 
-    .toggle-theme {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: var(--card-bg);
-      color: var(--fg);
-      border: 1px solid var(--fg);
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 36px;
-      text-align: center;
-      padding: 0;
-    }
+  .brand {
+    position: fixed;
+    top: 22px;
+    left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fg-muted);
+  }
+  .brand i { color: var(--accent); font-size: 18px; }
 
-    .signup-container {
-      background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 360px;
-      text-align: center;
-    }
+  .signup-container {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 2.25rem 2rem;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
 
-    h2 {
-      margin-bottom: 1.5rem;
-    }
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--co2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 22px;
+    color: #fff;
+  }
 
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      margin: 0.5rem 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: var(--input-bg);
-      color: var(--input-fg);
-    }
+  h2 {
+    margin: 0 0 4px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+  .subtitle {
+    margin: 0 0 22px;
+    font-size: 12.5px;
+    color: var(--fg-muted);
+  }
 
-    .password-wrapper {
-      position: relative;
-    }
+  .field { text-align: left; margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--fg-muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
 
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--link);
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
+  input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--input-fg);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input::placeholder { color: var(--fg-muted); opacity: 0.7; }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+  }
+  input.input-error { border-color: var(--danger); }
 
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 1rem;
-      border: none;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: var(--button-bg);
-      color: var(--button-fg);
-    }
+  .password-wrapper { position: relative; }
+  .password-wrapper input { padding-right: 56px; }
+  .toggle-password {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: auto;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+  }
+  .toggle-password:hover { background: rgba(16,185,129,0.1); }
 
-    button:hover {
-      opacity: 0.95;
-    }
+  /* Password strength meter */
+  .strength-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 7px;
+  }
+  .strength-bar {
+    height: 3px;
+    flex: 1;
+    border-radius: 2px;
+    background: var(--input-border);
+    transition: background 0.2s ease;
+  }
+  .strength-label {
+    font-size: 10.5px;
+    color: var(--fg-muted);
+    margin-top: 5px;
+    text-align: left;
+    min-height: 13px;
+  }
 
-    .links {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
+  .hint {
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin-top: 5px;
+    text-align: left;
+  }
+  .hint.match-ok { color: var(--success); }
+  .hint.match-bad { color: var(--danger); }
 
-    .links a {
-      color: var(--link);
-      text-decoration: none;
-    }
+  button {
+    width: 100%;
+    padding: 11px;
+    margin-top: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    background-color: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  button:hover { background-color: var(--accent-hover); }
+  button:active { transform: scale(0.99); }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .links a:hover {
-      text-decoration: underline;
-    }
+  .links {
+    margin-top: 18px;
+    font-size: 12.5px;
+    color: var(--fg-muted);
+  }
+  .links a {
+    color: var(--link);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .links a:hover { text-decoration: underline; }
 
-    #message {
-      margin-top: 1rem;
-      color: red;
-    }
-  </style>
+  #message {
+    margin-top: 14px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: var(--danger);
+    background: var(--danger-bg);
+    display: none;
+    text-align: left;
+  }
+  #message.visible { display: block; }
+  #message.success { color: var(--success); background: var(--success-bg); }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+  .spinner.visible { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
-  <button class="toggle-theme" onclick="toggleTheme()">☾</button>
+
+  <div class="brand"><i class="ti ti-bolt"></i> Wattaware</div>
+  <button class="toggle-theme" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+    <i class="ti ti-moon" id="theme-icon"></i>
+  </button>
 
   <div class="signup-container">
-    <h2>Create Your WattAware Account</h2>
-    <input id="email" type="email" placeholder="Email" />
+    <div class="header-icon"><i class="ti ti-leaf"></i></div>
+    <h2>Create your account</h2>
+    <p class="subtitle">Start tracking your carbon footprint today</p>
 
-    <div class="password-wrapper">
-      <input id="password" type="password" placeholder="Password" />
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
     </div>
 
-    <button onclick="signup()">Sign Up</button>
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="password-wrapper">
+        <input id="password" type="password" placeholder="At least 8 characters" autocomplete="new-password" />
+        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">Show</button>
+      </div>
+      <div class="strength-row">
+        <div class="strength-bar" id="bar1"></div>
+        <div class="strength-bar" id="bar2"></div>
+        <div class="strength-bar" id="bar3"></div>
+        <div class="strength-bar" id="bar4"></div>
+      </div>
+      <div class="strength-label" id="strength-label"></div>
+    </div>
+
+    <div class="field">
+      <label for="confirm-password">Confirm password</label>
+      <div class="password-wrapper">
+        <input id="confirm-password" type="password" placeholder="Re-enter password" autocomplete="new-password" />
+        <button type="button" class="toggle-password" onclick="togglePassword('confirm-password', this)">Show</button>
+      </div>
+      <div class="hint" id="match-hint"></div>
+    </div>
+
+    <button onclick="signup()" id="signup-btn">
+      <span class="spinner" id="signup-spinner"></span>
+      <span id="signup-btn-text">Create account</span>
+    </button>
 
     <div class="links">
-      <a href="login.html">Back to Login</a>
+      Already have an account? <a href="login.html">Log in</a>
     </div>
 
     <div id="message"></div>
@@ -156,6 +326,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
+
   <script>
     const { ipcRenderer } = require('electron');
 
@@ -168,37 +339,154 @@
       appId: "1:46958510191:web:9b259ae97ee67083d5cd9a",
       measurementId: "G-XNLFX18H7L"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    async function signup() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      try {
-        await auth.createUserWithEmailAndPassword(email, password);
-        localStorage.setItem('auth', 'true');
-        ipcRenderer.send('login-success');
-      } catch (error) {
-        document.getElementById('message').innerText = error.message;
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.innerText = text;
+      msg.className = 'visible' + (type === 'success' ? ' success' : '');
+    }
+    function clearMessage() {
+      const msg = document.getElementById('message');
+      msg.className = '';
+      msg.innerText = '';
+    }
+    function setLoading(isLoading) {
+      document.getElementById('signup-btn').disabled = isLoading;
+      document.getElementById('signup-spinner').classList.toggle('visible', isLoading);
+      document.getElementById('signup-btn-text').textContent = isLoading ? 'Creating account...' : 'Create account';
+    }
+    function friendlyError(error) {
+      const map = {
+        'auth/email-already-in-use': 'An account with that email already exists.',
+        'auth/invalid-email':        'That email address looks invalid.',
+        'auth/weak-password':        'Password should be at least 6 characters.',
+        'auth/network-request-failed': 'Network error — check your connection.'
+      };
+      return map[error.code] || error.message;
+    }
+
+    // ── Password strength meter ──
+    function scorePassword(pw) {
+      let score = 0;
+      if (pw.length >= 8) score++;
+      if (pw.length >= 12) score++;
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+      return score; // 0–4
+    }
+    function renderStrength() {
+      const pw = document.getElementById('password').value;
+      const score = pw.length === 0 ? 0 : scorePassword(pw);
+      const colors = ['#dc2626', '#dc2626', '#d97706', '#16a34a', '#10b981'];
+      const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+      for (let i = 1; i <= 4; i++) {
+        const bar = document.getElementById('bar' + i);
+        bar.style.background = i <= score ? colors[score] : 'var(--input-border)';
+      }
+      document.getElementById('strength-label').textContent = pw.length > 0 ? labels[score] : '';
+      document.getElementById('strength-label').style.color = pw.length > 0 ? colors[score] : 'var(--fg-muted)';
+    }
+
+    // ── Confirm-password live match hint ──
+    function renderMatchHint() {
+      const pw = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      const hint = document.getElementById('match-hint');
+      if (confirm.length === 0) {
+        hint.textContent = '';
+        hint.className = 'hint';
+        return;
+      }
+      if (pw === confirm) {
+        hint.textContent = 'Passwords match';
+        hint.className = 'hint match-ok';
+      } else {
+        hint.textContent = 'Passwords do not match';
+        hint.className = 'hint match-bad';
       }
     }
 
-    function togglePassword() {
-      const passwordInput = document.getElementById("password");
-      const toggleBtn = document.querySelector(".toggle-password");
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-        toggleBtn.innerText = "Hide";
+    document.getElementById('password').addEventListener('input', () => {
+      renderStrength();
+      renderMatchHint();
+    });
+    document.getElementById('confirm-password').addEventListener('input', renderMatchHint);
+
+    async function signup() {
+      clearMessage();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+
+      document.getElementById('email').classList.remove('input-error');
+      document.getElementById('password').classList.remove('input-error');
+      document.getElementById('confirm-password').classList.remove('input-error');
+
+      if (!email || !password || !confirm) {
+        showMessage('Please fill in all fields.');
+        if (!email) document.getElementById('email').classList.add('input-error');
+        if (!password) document.getElementById('password').classList.add('input-error');
+        if (!confirm) document.getElementById('confirm-password').classList.add('input-error');
+        return;
+      }
+      if (password.length < 8) {
+        showMessage('Password must be at least 8 characters.');
+        document.getElementById('password').classList.add('input-error');
+        return;
+      }
+      if (password !== confirm) {
+        showMessage('Passwords do not match.');
+        document.getElementById('confirm-password').classList.add('input-error');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        localStorage.setItem('auth', 'true');
+        showMessage('Account created! Redirecting...', 'success');
+        ipcRenderer.send('login-success');
+      } catch (error) {
+        showMessage(friendlyError(error));
+        setLoading(false);
+      }
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerText = 'Hide';
       } else {
-        passwordInput.type = "password";
-        toggleBtn.innerText = "Show";
+        input.type = 'password';
+        btn.innerText = 'Show';
       }
     }
 
     function toggleTheme() {
-      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.toggle('dark');
+      document.getElementById('theme-icon').className = isDark ? 'ti ti-sun' : 'ti ti-moon';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
+
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+      document.getElementById('theme-icon').className = 'ti ti-sun';
+    }
+
+    // Enter key navigation / submit
+    document.getElementById('email').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('password').focus();
+    });
+    document.getElementById('password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('confirm-password').focus();
+    });
+    document.getElementById('confirm-password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') signup();
+    });
   </script>
 </body>
 </html>

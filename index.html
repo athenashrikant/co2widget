@@ -93,6 +93,12 @@
     .progress-bar  { height: 4px; background: #f3f4f6; border-radius: 2px; margin-top: 5px; }
     .progress-fill { height: 100%; border-radius: 2px; }
     .loading-txt { font-size: 11px; color: #9ca3af; text-align: center; padding: 20px 0; }
+    .month-nav-btn {
+      width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e5e7eb;
+      background: #fff; color: #6b7280; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; font-size: 13px;
+    }
+    .month-nav-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
   </style>
 </head>
 <body>
@@ -239,6 +245,26 @@
       </div>
 
     </div>
+
+    <!-- Monthly CO2 trend (real, day-wise within month) -->
+    <div class="chart-card" style="margin-top:14px">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-chart-bar"></i> Monthly CO₂ trend</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="month-nav-btn" id="month-prev" title="Previous month"><i class="ti ti-chevron-left"></i></button>
+          <span class="badge badge-red" id="month-label">—</span>
+          <button class="month-nav-btn" id="month-next" title="Next month"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;margin-bottom:10px">
+        <div style="font-size:12px;color:#6b7280">Month total: <strong id="month-total" style="color:#111">—</strong> kg</div>
+        <div style="font-size:12px;color:#6b7280">Daily avg: <strong id="month-avg" style="color:#111">—</strong> kg</div>
+        <div style="font-size:12px;color:#6b7280">Best day: <strong id="month-best" style="color:#111">—</strong></div>
+      </div>
+      <div class="chart-wrap h190">
+        <canvas id="monthChart"></canvas>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -377,17 +403,67 @@
         co2_emissions: total_co2,
         method:       data.method || 'Unknown'
       };
+
+      // Buffer this reading in memory — written to Firestore `history` only at session end
+      sessionHistoryBuffer.push(lastPayload);
+
+      // Track the CO2/energy delta produced *this tick* (for day/month aggregates)
+      pendingDeltaCo2    += energy_kwh * CO2_PER_KWH;
+      pendingDeltaEnergy += energy_kwh;
     });
 
-    // ── Firebase: write current doc + append history row ──
+    // Accumulators for whatever has happened since the last Firebase sync
+    let pendingDeltaCo2    = 0;
+    let pendingDeltaEnergy = 0;
+
+    // In-memory buffer of raw readings — flushed to Firestore `history` only at session end
+    let sessionHistoryBuffer = [];
+
+    function dayKey(d)   { return d.toISOString().slice(0,10); }            // YYYY-MM-DD
+    function monthKey(d) { return d.toISOString().slice(0,7); }             // YYYY-MM
+    function dayOfMonthKey(d) { return String(d.getDate()).padStart(2,'0'); } // "01".."31"
+
+    // ── Firebase: write current doc + append history row + roll up day/month aggregates ──
     setInterval(async () => {
       if (!lastPayload || !lastPayload.timestamp) return;
+      if (pendingDeltaCo2 === 0 && pendingDeltaEnergy === 0) return; // nothing new since last sync
       try {
         const docRef = db.collection('laptop_power_logs').doc(deviceId);
+        const now = new Date();
+
+        // 1. Latest snapshot (unchanged behaviour)
         await docRef.set(lastPayload, { merge: true });
 
-        // Append to history subcollection for heatmap + insights
-        await docRef.collection('history').add(lastPayload);
+        // NOTE: raw `history` is no longer written here — it's buffered in
+        // sessionHistoryBuffer and flushed once at session end (see flushSessionHistory()).
+
+        // 3. Day-wise rollup: laptop_power_logs/{deviceId}/days/{YYYY-MM-DD}
+        const dKey = dayKey(now);
+        const dayRef = docRef.collection('days').doc(dKey);
+        await dayRef.set({
+          date: dKey,
+          total_co2_kg:    firebase.firestore.FieldValue.increment(pendingDeltaCo2),
+          total_energy_kwh: firebase.firestore.FieldValue.increment(pendingDeltaEnergy),
+          reading_count:   firebase.firestore.FieldValue.increment(1),
+          last_updated:    now.toISOString()
+        }, { merge: true });
+
+        // 4. Month-wise rollup: laptop_power_logs/{deviceId}/months/{YYYY-MM}
+        const mKey  = monthKey(now);
+        const domKey = dayOfMonthKey(now);
+        const monthRef = docRef.collection('months').doc(mKey);
+        await monthRef.set({
+          month: mKey,
+          total_co2_kg:    firebase.firestore.FieldValue.increment(pendingDeltaCo2),
+          total_energy_kwh: firebase.firestore.FieldValue.increment(pendingDeltaEnergy),
+          reading_count:   firebase.firestore.FieldValue.increment(1),
+          last_updated:    now.toISOString(),
+          [`daily_breakdown.${domKey}`]: firebase.firestore.FieldValue.increment(pendingDeltaCo2)
+        }, { merge: true });
+
+        // Reset deltas now that they're persisted
+        pendingDeltaCo2    = 0;
+        pendingDeltaEnergy = 0;
 
         const badge = document.getElementById('sync-badge');
         badge.style.display = '';
@@ -402,71 +478,124 @@
       }
     }, 3000);
 
-    // ── Heatmap: load last 7 days from Firestore history ──
+    // ── Heatmap: read 7 daily aggregate docs (cheap, no history scan) ──
     async function loadHeatmap() {
       const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
       const hmEl = document.getElementById('heatmap');
 
-      // Build last-7-days date list (oldest → newest)
       const today = new Date(); today.setHours(0,0,0,0);
       const days = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date(today); d.setDate(d.getDate() - i);
         days.push(d);
       }
-
-      // Set day label headers
       days.forEach((d, i) => {
         document.getElementById(`hd${i}`).textContent = DAY_NAMES[d.getDay()];
       });
 
-      // Query history from 7 days ago
-      const since = new Date(today); since.setDate(since.getDate() - 6);
-      let docs = [];
-      try {
-        const snap = await db.collection('laptop_power_logs').doc(deviceId)
-          .collection('history')
-          .where('timestamp', '>=', since.toISOString())
-          .get();
-        docs = snap.docs.map(d => d.data());
-      } catch(e) {
-        console.warn('Heatmap query failed:', e);
-      }
+      const vals = await Promise.all(days.map(async d => {
+        try {
+          const doc = await db.collection('laptop_power_logs').doc(deviceId)
+            .collection('days').doc(dayKey(d)).get();
+          return doc.exists ? (doc.data().total_co2_kg || 0) : 0;
+        } catch(e) { return 0; }
+      }));
 
-      // Aggregate CO2 per day (YYYY-MM-DD key)
-      const co2ByDay = {};
-      days.forEach(d => { co2ByDay[d.toISOString().slice(0,10)] = 0; });
-      docs.forEach(doc => {
-        const key = doc.timestamp ? doc.timestamp.slice(0,10) : null;
-        if (key && co2ByDay[key] !== undefined) {
-          // each history doc is a snapshot; use energy delta approximation
-          const energyIncrement = (doc.power_watts || 0) / 3600 / 1000 * 3; // ~3s interval
-          co2ByDay[key] += energyIncrement * CO2_PER_KWH;
-        }
-      });
-
-      const vals  = days.map(d => co2ByDay[d.toISOString().slice(0,10)] || 0);
       const maxVal = Math.max(...vals, 0.0001);
-
-      // 5-level green colour scale
       const hmColors = ['#f0fdf4','#dcfce7','#86efac','#22c55e','#15803d','#14532d'];
       function co2ToColor(v) {
         const idx = Math.min(5, Math.floor((v / maxVal) * 5));
         return hmColors[idx];
       }
 
-      // Render: 1 row × 7 cols (one cell per day)
       hmEl.innerHTML = '';
       hmEl.style.gridTemplateColumns = 'repeat(7, 1fr)';
       days.forEach((d, i) => {
         const cell = document.createElement('div');
-        cell.className  = 'hm-cell';
-        cell.style.height  = '40px';
+        cell.className = 'hm-cell';
+        cell.style.height = '40px';
         cell.style.background = co2ToColor(vals[i]);
         cell.title = `${DAY_NAMES[d.getDay()]} ${d.toLocaleDateString()} — ${vals[i].toFixed(4)} kg CO₂`;
         hmEl.appendChild(cell);
       });
     }
+
+    // ── Monthly chart: read single month aggregate doc, render daily_breakdown ──
+    let viewedMonth = new Date(); viewedMonth.setDate(1);
+
+    const monthChart = new Chart(document.getElementById('monthChart'), {
+      type: 'bar',
+      data: { labels: [], datasets: [{
+        label: 'CO₂ (kg)', data: [],
+        backgroundColor: '#dc2626', borderRadius: 4, borderSkipped: false
+      }]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.75)', titleFont:{size:11}, bodyFont:{size:11},
+            callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(4)} kg CO₂` } }
+        },
+        scales: {
+          x: { grid: { display:false }, ticks: { font:{size:10}, color:'#9ca3af' }, border:{display:false} },
+          y: { grid: { color:'rgba(0,0,0,0.04)' }, ticks: { font:{size:10}, color:'#9ca3af', callback: v => v+' kg' }, border:{display:false}, min:0 }
+        }
+      }
+    });
+
+    async function loadMonthChart() {
+      const mKey = monthKey(viewedMonth);
+      const label = viewedMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      document.getElementById('month-label').textContent = label;
+
+      let breakdown = {};
+      let totalKg = 0;
+      try {
+        const doc = await db.collection('laptop_power_logs').doc(deviceId)
+          .collection('months').doc(mKey).get();
+        if (doc.exists) {
+          const data = doc.data();
+          breakdown = data.daily_breakdown || {};
+          totalKg = data.total_co2_kg || 0;
+        }
+      } catch(e) { console.warn('Month query failed:', e); }
+
+      const daysInMonth = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth()+1, 0).getDate();
+      const labels = [];
+      const values = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = String(day).padStart(2,'0');
+        labels.push(String(day));
+        values.push(breakdown[key] || 0);
+      }
+
+      monthChart.data.labels = labels;
+      monthChart.data.datasets[0].data = values;
+      monthChart.update();
+
+      document.getElementById('month-total').textContent = totalKg.toFixed(4);
+      const activeDays = values.filter(v => v > 0).length;
+      document.getElementById('month-avg').textContent = activeDays > 0 ? (totalKg/activeDays).toFixed(4) : '0.0000';
+
+      const maxVal = Math.max(...values);
+      if (maxVal > 0) {
+        const bestIdx = values.indexOf(Math.min(...values.filter(v => v > 0)));
+        document.getElementById('month-best').textContent = bestIdx >= 0 ? `${bestIdx+1} ${label.split(' ')[0]}` : '—';
+      } else {
+        document.getElementById('month-best').textContent = '—';
+      }
+    }
+
+    document.getElementById('month-prev').addEventListener('click', () => {
+      viewedMonth.setMonth(viewedMonth.getMonth() - 1);
+      loadMonthChart();
+    });
+    document.getElementById('month-next').addEventListener('click', () => {
+      const next = new Date(viewedMonth); next.setMonth(next.getMonth() + 1);
+      if (next > new Date()) return; // don't navigate into the future
+      viewedMonth.setMonth(viewedMonth.getMonth() + 1);
+      loadMonthChart();
+    });
 
     // ── Smart insights: real personalised from Firestore history ──
     async function loadInsights() {
@@ -483,18 +612,22 @@
         console.warn('Insights query failed:', e);
       }
 
-      // If no history yet, show session-based insights
+      // `history` only contains *past, flushed* sessions now — today's readings
+      // live in sessionHistoryBuffer until this session ends. Blend both so
+      // "today" isn't invisible to peak-hour / day-bucket calculations.
+      const combinedDocs = docs.concat(sessionHistoryBuffer);
+
+      // Session-based pace (still fully live, independent of history)
       const sessionCo2  = total_co2;
       const sessionEnergy = total_energy_kwh;
       const sessionElapsed = (Date.now() - sessionStart) / 1000 / 3600; // hours
 
-      // Compute per-hour pace from current session
       const paceCo2PerHour = sessionElapsed > 0 ? sessionCo2 / sessionElapsed : 0;
       const projectedDailyCo2 = paceCo2PerHour * 24;
 
-      // Peak hour from history docs
+      // Peak hour — from flushed history + this session's buffered readings
       const hourBuckets = Array(24).fill(0);
-      docs.forEach(doc => {
+      combinedDocs.forEach(doc => {
         if (doc.timestamp) {
           const h = new Date(doc.timestamp).getHours();
           const inc = (doc.power_watts || 0) / 3600 / 1000 * 3 * CO2_PER_KWH;
@@ -504,20 +637,30 @@
       const peakHour   = hourBuckets.indexOf(Math.max(...hourBuckets));
       const peakLabel  = `${peakHour}:00–${peakHour+1}:00`;
 
-      // Best vs worst day from history
+      // Best vs worst day — read from `days/{date}` aggregates (always up to date,
+      // unlike `history` which lags until session end) instead of re-deriving from raw docs.
       const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      const dayBuckets = {};
-      docs.forEach(doc => {
-        if (!doc.timestamp) return;
-        const key = doc.timestamp.slice(0,10);
-        dayBuckets[key] = (dayBuckets[key]||0) + (doc.power_watts||0)/3600/1000*3*CO2_PER_KWH;
-      });
-      const dayEntries = Object.entries(dayBuckets);
       let bestDay = null, worstDay = null;
-      if (dayEntries.length > 0) {
-        dayEntries.sort((a,b) => a[1]-b[1]);
-        bestDay  = { date: dayEntries[0][0],  co2: dayEntries[0][1] };
-        worstDay = { date: dayEntries[dayEntries.length-1][0], co2: dayEntries[dayEntries.length-1][1] };
+      try {
+        const since7 = new Date(); since7.setDate(since7.getDate() - 6); since7.setHours(0,0,0,0);
+        const dayDocs = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(since7); d.setDate(d.getDate() + i);
+          const key = dayKey(d);
+          const snap = await db.collection('laptop_power_logs').doc(deviceId)
+            .collection('days').doc(key).get();
+          if (snap.exists) {
+            const data = snap.data();
+            if ((data.total_co2_kg || 0) > 0) dayDocs.push({ date: key, co2: data.total_co2_kg });
+          }
+        }
+        if (dayDocs.length > 0) {
+          dayDocs.sort((a,b) => a.co2 - b.co2);
+          bestDay  = dayDocs[0];
+          worstDay = dayDocs[dayDocs.length - 1];
+        }
+      } catch(e) {
+        console.warn('Best/worst day query failed:', e);
       }
 
       // Current TOD active slot
@@ -553,7 +696,7 @@
       });
 
       // 3. Peak hour (from history, or session)
-      if (docs.length > 0 && Math.max(...hourBuckets) > 0) {
+      if (combinedDocs.length > 0 && Math.max(...hourBuckets) > 0) {
         rows.push({
           icon: '<i class="ti ti-trending-up insight-icon" style="color:#d97706"></i>',
           html: `<strong>Peak hour</strong> — your highest emissions over the last 7 days occur at <strong>${peakLabel}</strong>. Consider reducing load then.`
@@ -588,16 +731,56 @@
     // Load heatmap + insights on boot, refresh every 30 s
     loadHeatmap();
     loadInsights();
-    setInterval(() => { loadHeatmap(); loadInsights(); }, 30000);
+    loadMonthChart();
+    setInterval(() => { loadHeatmap(); loadInsights(); loadMonthChart(); }, 30000);
+
+    // ── Flush buffered raw readings to Firestore `history` — called once at session end ──
+    let historyFlushed = false;
+    async function flushSessionHistory() {
+      if (historyFlushed) return;          // avoid double-flush (e.g. logout + beforeunload both firing)
+      if (sessionHistoryBuffer.length === 0) { historyFlushed = true; return; }
+      historyFlushed = true;
+
+      const docRef = db.collection('laptop_power_logs').doc(deviceId);
+      const historyCol = docRef.collection('history');
+      const BATCH_LIMIT = 450; // stay safely under Firestore's 500 ops/batch cap
+
+      try {
+        for (let i = 0; i < sessionHistoryBuffer.length; i += BATCH_LIMIT) {
+          const chunk = sessionHistoryBuffer.slice(i, i + BATCH_LIMIT);
+          const batch = db.batch();
+          chunk.forEach(reading => {
+            const ref = historyCol.doc(); // auto-id
+            batch.set(ref, reading);
+          });
+          await batch.commit();
+        }
+        console.log(`✅ Flushed ${sessionHistoryBuffer.length} readings to history`);
+        sessionHistoryBuffer = [];
+      } catch (e) {
+        console.error('❌ Failed to flush session history:', e);
+        historyFlushed = false; // allow a retry if something calls this again
+      }
+    }
 
     // Window controls
-    document.getElementById('close-btn').addEventListener('click',  () => ipcRenderer.send('window-control','close'));
+    document.getElementById('close-btn').addEventListener('click', async () => {
+      await flushSessionHistory();
+      ipcRenderer.send('window-control','close');
+    });
     document.getElementById('min-btn').addEventListener('click',    () => ipcRenderer.send('window-control','minimize'));
     document.getElementById('max-btn').addEventListener('click',    () => ipcRenderer.send('window-control','maximize'));
 
-    document.getElementById('logout-btn').addEventListener('click', () => {
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await flushSessionHistory();
       localStorage.removeItem('session_start');
       ipcRenderer.send('logout');
+    });
+
+    // Safety net: flush if the window/app closes some other way (Cmd+Q, taskbar close, crash recovery, etc.)
+    window.addEventListener('beforeunload', () => {
+      // beforeunload can't reliably await async work, so fire-and-forget as a best effort
+      flushSessionHistory();
     });
   </script>
 </body>
