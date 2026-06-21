@@ -6,9 +6,11 @@
   "main": "main.js",
   "license": "MIT",
   "scripts": {
-    "start": "electron .",
-    "build:win": "electron-builder --win"
-  },
+  "start": "electron .",
+  "build:mac": "electron-builder --mac dmg",
+  "build:win": "electron-builder --win",
+  "build:all": "electron-builder -mwl"
+},
   "devDependencies": {
     "electron": "^33.4.11",
     "electron-builder": "^26.0.12"
