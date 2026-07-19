@@ -30,6 +30,13 @@ const deviceId = machineIdSync();
 
 let lastPayload = {};
 
+function formatUptime(hours) {
+  if (typeof hours !== 'number' || Number.isNaN(hours)) return 'Live';
+  const h = Math.floor(hours);
+  const m = Math.floor((hours - h) * 60);
+  return `${h}h ${m}m`;
+}
+
 const powerCtx = document.getElementById('powerChart').getContext('2d');
 const co2Ctx = document.getElementById('carbonChart').getContext('2d');
 
@@ -80,7 +87,7 @@ ipcRenderer.on('power-data', (event, data) => {
   localStorage.setItem('energy_kwh', total_energy_kwh.toFixed(6));
   localStorage.setItem('co2_emissions', total_co2.toFixed(6));
 
-  document.getElementById('uptime').textContent = 'Live';
+  document.getElementById('uptime').textContent = formatUptime(data.uptime_hours);
   document.getElementById('energy').textContent = total_energy_kwh.toFixed(4);
   document.getElementById('co2').textContent = total_co2.toFixed(4);
   document.getElementById('status').textContent = `Live Power: ${power.toFixed(1)} W`;

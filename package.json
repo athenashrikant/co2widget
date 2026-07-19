@@ -6,18 +6,19 @@
   "main": "main.js",
   "license": "MIT",
   "scripts": {
-  "start": "electron .",
-  "build:mac": "electron-builder --mac dmg",
-  "build:win": "electron-builder --win",
-  "build:all": "electron-builder -mwl"
-},
+    "start": "electron .",
+    "build:mac": "electron-builder --mac dmg",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder -mwl"
+  },
   "devDependencies": {
     "electron": "^33.4.11",
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "firebase": "^11.6.0",
-    "node-machine-id": "^1.1.12"
+    "node-machine-id": "^1.1.12",
+    "systeminformation": "^5.32.0"
   },
   "build": {
     "appId": "com.co2widget.app",

@@ -1,80 +1,35 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const { spawn } = require('child_process');
-const path = require('path');
+const { startPowerStream } = require('./power_tracker');
 
 let mainWindow;
-let pythonProcess;
+let powerStream = null;
 let lastPowerData = null;
 
-// Resolve path to the Python script depending on packaged state
-const pythonScriptPath = app.isPackaged
-	? path.join(process.resourcesPath, 'adaptive_power_tracker.py')
-	: path.join(__dirname, 'adaptive_power_tracker.py');
+function startTracking() {
+	if (powerStream) return; // already running
 
-// Cross-platform Python launcher
-function getPythonCommand() {
-	if (process.platform === 'win32') {
-		return { cmd: 'py', argsPrefix: ['-3'] };
+	powerStream = startPowerStream((data) => {
+		lastPowerData = data;
+
+		if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+			mainWindow.webContents.send('power-data', data);
+		}
+	}, 1000);
+
+	console.log('✅ Power tracking started (native JS)');
+}
+
+function stopTracking() {
+	if (powerStream) {
+		powerStream.stop();
+		powerStream = null;
+		console.log('🛑 Power tracking stopped');
 	}
-
-	if (process.platform === 'darwin') {
-		return { cmd: '/usr/bin/python3', argsPrefix: [] };
-	}
-
-	return { cmd: 'python3', argsPrefix: [] };
 }
 
 app.whenReady().then(() => {
-	const python = getPythonCommand();
-
-	console.log('Using Python:', python.cmd);
-	console.log('Python Script:', pythonScriptPath);
-
-	// Start Python script
-	pythonProcess = spawn(
-		python.cmd,
-		[...python.argsPrefix, pythonScriptPath],
-		{
-			stdio: ['ignore', 'pipe', 'pipe'],
-			windowsHide: true,
-			shell: false
-		}
-	);
-
-	pythonProcess.stdout.on('data', (chunk) => {
-		const lines = chunk.toString().split('\n');
-
-		lines.forEach((line) => {
-			if (!line.trim()) return;
-
-			console.log('[Python output]', line);
-
-			try {
-				const jsonData = JSON.parse(line);
-
-				lastPowerData = jsonData;
-
-				if (mainWindow && mainWindow.webContents) {
-					mainWindow.webContents.send('power-data', jsonData);
-				}
-			} catch (e) {
-				console.error('Invalid JSON from Python:', line);
-			}
-		});
-	});
-
-	pythonProcess.stderr.on('data', (err) => {
-		console.error('Python stderr:', err.toString());
-	});
-
-	pythonProcess.on('error', (err) => {
-		console.error('Failed to start Python process:', err);
-	});
-
-	pythonProcess.on('close', (code) => {
-		console.log(`Python process exited with code ${code}`);
-		pythonProcess = null;
-	});
+	// Start tracking immediately (was: spawn Python script)
+	startTracking();
 
 	// Main window
 	mainWindow = new BrowserWindow({
@@ -93,6 +48,9 @@ app.whenReady().then(() => {
 	ipcMain.on('login-success', () => {
 		mainWindow.loadFile('index.html');
 
+		// Restart tracking in case a previous logout stopped it
+		startTracking();
+
 		mainWindow.webContents.once('did-finish-load', () => {
 			console.log('✅ index.html fully loaded');
 
@@ -104,11 +62,7 @@ app.whenReady().then(() => {
 
 	ipcMain.on('logout', () => {
 		mainWindow.loadFile('login.html');
-
-		if (pythonProcess) {
-			pythonProcess.kill();
-			pythonProcess = null;
-		}
+		stopTracking();
 	});
 
 	ipcMain.on('window-control', (event, action) => {
@@ -136,9 +90,6 @@ app.whenReady().then(() => {
 	});
 
 	app.on('before-quit', () => {
-		if (pythonProcess) {
-			pythonProcess.kill();
-			pythonProcess = null;
-		}
+		stopTracking();
 	});
 });
