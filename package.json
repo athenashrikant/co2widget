@@ -20,23 +20,29 @@
     "node-machine-id": "^1.1.12",
     "systeminformation": "^5.32.0"
   },
-  "build": {
-    "appId": "com.co2widget.app",
-    "productName": "CO2Widget",
-    "files": [
-      "**/*",
-      "!node_modules/.cache/**"
+"build": {
+  "appId": "com.co2widget.app",
+  "productName": "CO2Widget",
+  "files": [
+    "**/*",
+    "!node_modules/.cache/**",
+    "!*.py",
+    
+    "!dist/**"
+  ],
+  "asar": true,
+  "mac": {
+    "target": [
+      { "target": "dmg", "arch": ["universal"] }
     ],
-    "extraResources": [
-      "adaptive_power_tracker.py"
+    "identity": null
+  },
+  "win": {
+    "target": [
+      "portable",
+      "zip"
     ],
-    "asar": true,
-    "win": {
-      "target": [
-        "portable",
-        "zip"
-      ],
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    }
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
   }
+}
 }
